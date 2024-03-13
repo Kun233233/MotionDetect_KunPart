@@ -6,6 +6,7 @@ project(${TARGET})
 include_directories(
     ../ThirdParty/Common
     ../ThirdParty/OpenNI2/Include
+    ../include
     # ../ThirdParty/OpenCV420/Windows/include
 	../ThirdParty/OpenCV470/opencv/build/include
     ../ThirdParty/UvcSwapper/Include
@@ -79,7 +80,11 @@ endif()
 
 
 #set(SRC_FILE DepthSavePoll.cpp)
-file(GLOB SRC "*.h" "*.cpp")
+file(GLOB SRC "*.h" 
+			"*.cpp" 
+			"../src/CameraModel.cpp"
+			"../include/CameraModel.h"
+)
 
 #add_executable(${TARGET} ${SRC_FILE})
 add_executable(${TARGET} ${SRC})

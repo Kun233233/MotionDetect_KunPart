@@ -20,6 +20,7 @@
 #include <regex>
 #include <vector>
 #include <chrono>
+#include <cmath>
 
 #include <omp.h>
 
@@ -38,8 +39,10 @@ const int IMAGE_WIDTH_640 = 640;
 const int  IMAGE_HEIGHT_480 = 480;
 //Read data outtime
 const int  UVC_TIME_OUT = 3000; //ms
+const float PI = 3.1415926535;
 
 const int feature_num = 6;
+
 
 enum class FeatureID
 {
@@ -51,12 +54,13 @@ enum class FeatureID
 	MouseTop= 32
 };
 
-const std::vector<int> feature_id_series = {	static_cast<int>(FeatureID::LeftL), 
+const std::vector<int> feature_id_series = {	static_cast<int>(FeatureID::MouseTop),	
+												static_cast<int>(FeatureID::NoseTop),
+												static_cast<int>(FeatureID::LeftL), 
 												static_cast<int>(FeatureID::LeftR), 
 												static_cast<int>(FeatureID::RightL), 
-												static_cast<int>(FeatureID::RightR), 
-												static_cast<int>(FeatureID::NoseTop, 
-												static_cast<int>(FeatureID::MouseTop)) };
+												static_cast<int>(FeatureID::RightR)
+												 };
 
 
 
@@ -180,6 +184,42 @@ std::string getValueAt(std::ifstream& file, int targetRow, int targetColumn, cha
 	return "";
 }
 
+
+
+// 函数将二维字符串数组存储为txt文件，使用指定分隔符
+void saveToTxt(const std::vector<std::vector<std::string>>& data, const std::string& filename, char delimiter) {
+	// 打开文件流
+	std::ofstream outfile(filename);
+
+	// 检查文件是否成功打开
+	if (!outfile.is_open()) {
+		std::cerr << "Error opening file: " << filename << std::endl;
+		return;
+	}
+
+	// 遍历二维数组并将数据写入文件
+	for (const auto& row : data) {
+		for (size_t i = 0; i < row.size(); ++i) {
+			outfile << row[i];
+
+			// 在每个元素后面添加分隔符，除了最后一个元素
+			if (i < row.size() - 1) {
+				outfile << delimiter;
+			}
+		}
+		// 换行表示新的一行
+		outfile << std::endl;
+	}
+
+	// 关闭文件流
+	outfile.close();
+}
+
+
+
+
+
+
 auto GetFeaturePointsPixels(const std::string& feature_rgb_path, std::vector<std::vector<std::string>>& feature_pixels_position, char delimiter)
 {
 	//// 打开文本文件
@@ -195,12 +235,13 @@ auto GetFeaturePointsPixels(const std::string& feature_rgb_path, std::vector<std
 
 	std::string line;
 	// 逐行读取文件内容
-	for (int currentRow = 2; std::getline(file, line); ++currentRow) {
+	for (int currentRow = 0; std::getline(file, line); ++currentRow) {
 		// 使用字符串流解析每一行的数据
 		std::istringstream iss(line);
 		std::string value;
 		std::vector<std::string> values;
 		//std::vector<std::vector<std::string>> feature_pixels_position;
+		if (currentRow == 0) { continue; }
 
 		int currentColumn = 0;
 		int nextFeature = 0;
@@ -210,8 +251,8 @@ auto GetFeaturePointsPixels(const std::string& feature_rgb_path, std::vector<std
 
 			// 如果当前列是目标列，则添加到 vector 中
 			if (currentColumn == feature_id_series[nextFeature] + 1) {
-				std::cout << currentRow - 2 << " " << currentColumn << "\n";
-				feature_pixels_position[nextFeature][currentRow - 2] = value;
+				std::cout << currentRow - 1 << " " << currentColumn << " " << value << "\n";
+				feature_pixels_position[nextFeature][currentRow - 1] = value;
 				nextFeature++;
 			}
 		}
@@ -320,6 +361,40 @@ cv::Mat GetPixels(const cv::Mat& points, const cv::Mat& camera_matrix, const cv:
 
 
 
+cv::Mat PositionToMotion(const cv::Mat& p1, const cv::Mat& p2, const cv::Mat& p3, const cv::Mat& p4)
+{
+	std::cout << p1 << p2 << p3 << p4 << '\n';
+
+	cv::Mat p2_p3 = p2 - p3;
+	cv::Mat p1_p3 = p1 - p3;
+
+	// n1, n2, n3分别代表面部建立的三个坐标轴的方向
+	cv::Mat n1 = p2_p3.cross(p1_p3);
+	cv::normalize(n1, n1);
+	cv::Mat n2 = p2_p3 - p1_p3;
+	cv::normalize(n2, n2);
+	cv::Mat n3 = n1.cross(n2);
+
+	float a = std::asinf(n2.at<float>(2, 0) / n3.at<float>(2, 0));
+	float b = -std::asinf(n1.at<float>(2, 0));
+	float c = std::atan2f(n1.at<float>(1, 0), n1.at<float>(0, 0));
+
+	if (a > PI / 2) { a = PI - a; }
+	if (c > PI / 2) { c = PI - c; }
+
+	cv::Mat center_position = p4 - 80.0f * n1;
+	float x = center_position.at<float>(0, 0);
+	float y = center_position.at<float>(1, 0);
+	float z = center_position.at<float>(2, 0);
+
+	cv::Mat center_pose = (cv::Mat_<float>(6, 1) << x, y, z, a, b, c);
+
+
+	return center_pose;
+}
+
+
+
 
 
 
@@ -339,15 +414,15 @@ int main()
 		std::string  depth_video_path = "D:/aaaLab/aaagraduate/SaveVideo/DepthSavePoll/depth_0.avi";
 		std::string  rgb_video_path = "D:/aaaLab/aaagraduate/SaveVideo/DepthSavePoll/rgb_0.avi";
 		// 存储成图片形式的地址
-		std::string  depth_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/src/DepthImgs";
-		std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/src/RGBImgs";
+		std::string  depth_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/DepthImgs";
+		std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/RGBImgs";
 
 		////std::ifstream file("D:/aaaLab/aaagraduate/SaveVideo/src/rgb.txt");
 		std::regex pattern(R"(\((\d+),(\d+)\))");
 
 		//// 打开文本文件
 		//std::ifstream feature_rgb_file("D:/aaaLab/aaagraduate/SaveVideo/src/rgb.txt");
-		std::string feature_rgb_path = "D:/aaaLab/aaagraduate/SaveVideo/src/rgb.txt";
+		std::string feature_rgb_path = "D:/aaaLab/aaagraduate/SaveVideo/source/rgb.txt";
 
 		// 打开文件
 		std::ifstream rgb_count_file(rgb_folder_path + "/frame_num.txt");
@@ -367,6 +442,14 @@ int main()
 		// 提前分配空间
 		feature_pixels_position.resize(static_cast<int>(feature_num * 1.5));
 		for (auto& row : feature_pixels_position) {
+			row.resize(static_cast<int>(countmax * 1.5));
+		}
+
+		// 创建一个 vector 用于存储选中特征点的每一帧空间点坐标
+		std::vector<std::vector<std::string>> feature_pixels_3D(feature_num);
+		// 提前分配空间
+		feature_pixels_3D.resize(static_cast<int>(feature_num * 1.5));
+		for (auto& row : feature_pixels_3D) {
 			row.resize(static_cast<int>(countmax * 1.5));
 		}
 
@@ -495,18 +578,22 @@ int main()
 			//std::cout << value << "\n";
 			//file.close();
 			//std::string value = elements[i];
+			std::vector<cv::Mat> position;
+			position.resize(feature_num * 1.5);
+
 			for (int feature_id = 0; feature_id < feature_num; feature_id++)
 			{
 				std::string value = feature_pixels_position[feature_id][i];
-
+				
+				std::cout << value << '\n';
 				std::smatch matches;
 				int x, y;
 				if (std::regex_search(value, matches, pattern)) {
 					// 第一个匹配项是整个字符串，后面的是括号内的两个数字
 					x = std::stoi(matches[1].str());
 					y = std::stoi(matches[2].str());
-					//std::cout << "First Number: " << x << std::endl;
-					//std::cout << "Second Number: " << y << std::endl;
+					std::cout << "First Number: " << x << std::endl;
+					std::cout << "Second Number: " << y << std::endl;
 				}
 				else {
 					std::cerr << "No match found" << std::endl;
@@ -521,14 +608,24 @@ int main()
 					float point_x = points_inrgb.at<float>(0, index);
 					float point_y = points_inrgb.at<float>(1, index);
 					float point_z = points_inrgb.at<float>(2, index);
+					
+					std::stringstream ss; // 创建一个字符串流对象
+					ss << std::fixed << std::setprecision(4); // 设置小数点精度为4位
+					ss << "(" << point_x << "," << point_y << "," << point_z << ")"; // 将浮点数写入字符串流中
+					std::string result = ss.str(); // 从字符串流中获取组合后的字符串
+					feature_pixels_3D[feature_id][i] = result;
+					std::cout << result << std::endl; // 输出结果
 
-					// 输出像素值
-					//std::cout << "Pixel value at (" << x << ", " << y << "): " << static_cast<int>(pixelValue) << std::endl;
-					std::cout << point_x << ", " << point_y << ", " << point_z << "\n";
+					cv::Mat point = (cv::Mat_<float>(3, 1) << point_x, point_y, point_z);
+					position[feature_id] = point;
 				}
 				else {
 					std::cerr << "Invalid index" << std::endl;
 				}
+
+				cv::Mat motion = PositionToMotion((position[2] + position[3]) / 2, (position[4] + position[5]) / 2, position[0], position[1]);
+
+
 
 			}
 
@@ -555,6 +652,8 @@ int main()
 
 		}
 		//file.close();
+		std::string feature_3D_path = "D:/aaaLab/aaagraduate/SaveVideo/src/points.txt";
+		saveToTxt(feature_pixels_3D, feature_3D_path, '\t');
 
 	}
 	catch (cv::Exception& e)
