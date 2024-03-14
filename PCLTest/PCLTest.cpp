@@ -145,70 +145,9 @@
 #include <pcl/console/parse.h>
 
 
-//int main(int argc, char** argv) {
-//    std::cout << "Test PCL !!!" << std::endl;
-//
-//    pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud_ptr(new pcl::PointCloud<pcl::PointXYZRGB>);
-//    uint8_t r(255), g(15), b(15);
-//    for (float z(-1.0); z <= 1.0; z += 0.05)
-//    {
-//        for (float angle(0.0); angle <= 360.0; angle += 5.0)
-//        {
-//            pcl::PointXYZRGB point;
-//            point.x = 0.5 * cosf(pcl::deg2rad(angle));
-//            point.y = sinf(pcl::deg2rad(angle));
-//            point.z = z;
-//            uint32_t rgb = (static_cast<uint32_t>(r) << 16 |
-//                static_cast<uint32_t>(g) << 8 | static_cast<uint32_t>(b));
-//            point.rgb = *reinterpret_cast<float*>(&rgb);
-//            point_cloud_ptr->points.push_back(point);
-//        }
-//        if (z < 0.0)
-//        {
-//            r -= 12;
-//            g += 12;
-//        }
-//        else
-//        {
-//            g -= 12;
-//            b += 12;
-//        }
-//    }
-//    point_cloud_ptr->width = (int)point_cloud_ptr->points.size();
-//    point_cloud_ptr->height = 1;
-//
-//    pcl::visualization::CloudViewer viewer("test");
-//    viewer.showCloud(point_cloud_ptr);
-//    while (!viewer.wasStopped()) {};
-//    return 0;
-//}
+#include "CameraModel.h"
+#include "Utility.h"
 
-
-
-
-//#include <iostream>
-//#include <OpenNI.h>
-//#include <opencv2/core/core.hpp>
-//#include <opencv2/highgui/highgui.hpp>
-//#include <opencv2/imgproc/imgproc.hpp>
-//#include <opencv2/imgproc/imgproc_c.h>
-//#include <opencv2/highgui/highgui_c.h>
-//#include <opencv2/calib3d/calib3d.hpp>
-//
-//#include "OniSampleUtilities.h"
-//#include "UVC_Swapper.h"
-//#include "UVCSwapper.h"
-//#include "OBTypes.h"
-//#include "ObCommon.h"
-////#include "OniSampleUtilities.h"
-//
-//#include <fstream>
-//
-//#include <omp.h>
-//
-//using namespace std;
-//using namespace openni;
-//using namespace cv;
 
 //RGB w x h
 const int IMAGE_WIDTH_640 = 640;
@@ -238,165 +177,165 @@ void showdevice() {
 	}
 }
 
-void printMatrixInfo(const cv::Mat& matrix, const std::string& name) {
-	std::cout << "Matrix: " << name << "\n";
-	std::cout << "Type: " << matrix.type() << "\n";
-	//std::cout << "Size: " << matrix.size() << "\n";
-	std::cout << "shape: " << "[" << matrix.size().height << ", " << matrix.size().width << "]" << "\n";
-	std::cout << "Channels: " << matrix.channels() << "\n";
-	std::cout << "Depth: " << matrix.depth() << "\n";
-	std::cout << "------------------------------------\n";
-}
-
-void hMirrorTrans(const cv::Mat& src, cv::Mat& dst)
-{
-	dst.create(src.rows, src.cols, src.type());
-
-	int rows = src.rows;
-	int cols = src.cols;
-
-	auto datatype = src.type();
-
-	switch (src.channels())
-	{
-	case 1:   //1通道比如深度图像
-		if (datatype == CV_16UC1)
-		{
-			const ushort* origal;
-			ushort* p;
-			for (int i = 0; i < rows; i++) {
-				origal = src.ptr<ushort>(i);
-				p = dst.ptr<ushort>(i);
-				for (int j = 0; j < cols; j++) {
-					p[j] = origal[cols - 1 - j];
-				}
-			}
-		}
-		else if (datatype == CV_8U)
-		{
-			const uchar* origal;
-			uchar* p;
-			for (int i = 0; i < rows; i++) {
-				origal = src.ptr<uchar>(i);
-				p = dst.ptr<uchar>(i);
-				for (int j = 0; j < cols; j++) {
-					p[j] = origal[cols - 1 - j];
-				}
-			}
-		}
-
-		break;
-	case 3:   //3通道比如彩色图像
-		const cv::Vec3b * origal3;
-		cv::Vec3b* p3;
-		for (int i = 0; i < rows; i++) {
-			origal3 = src.ptr<cv::Vec3b>(i);
-			p3 = dst.ptr<cv::Vec3b>(i);
-			for (int j = 0; j < cols; j++) {
-				p3[j] = origal3[cols - 1 - j];
-			}
-		}
-		break;
-	default:
-		break;
-	}
-
-}
-
-
-
-
-cv::Mat Get3DPoints(const cv::Mat& depth, const cv::Mat& pixels_to_points_map)
-{
-	//cv::Mat points(IMAGE_HEIGHT_480, IMAGE_WIDTH_640, CV_64FC3);
-	cv::Mat points(3, IMAGE_HEIGHT_480 * IMAGE_WIDTH_640, CV_32F);
-
-	// 对depth进行reshape操作，操作后的大小为[1, 640*480]
-	cv::Mat depth_flatten = depth.reshape(1, 1);
-
-	// 将depth_flatten中的每个元素复制到三行
-	cv::Mat depth_flatten_3 = cv::repeat(depth_flatten, 3, 1);
-
-	//转为float
-	cv::Mat depth_flatten_3_float;
-	depth_flatten_3.convertTo(depth_flatten_3_float, CV_32F);
-
-	cv::multiply(depth_flatten_3_float, pixels_to_points_map, points);
-
-	return points;
-}
-
-
-
-cv::Mat GetPixels(const cv::Mat& points, const cv::Mat& camera_matrix, const cv::Mat& depth_map)
-{
-	// 得到深度图每个点对应在rgb图像中的像素
-	cv::Mat pixels = camera_matrix * points;
-
-	// 获取第三行的元素
-	cv::Mat z = pixels.row(2);
-
-	// 创建一个矩阵，每个元素都是对应列的第三行元素的倒数
-	cv::Mat inverse_z;
-	cv::divide(1.0, z, inverse_z);
-	cv::Mat inverse_z_extended = cv::repeat(inverse_z, 3, 1); // [1, 480*640] -> [3, 480*640]
-
-	// 将原始矩阵与倒数矩阵逐元素相乘
-	pixels = pixels.mul(inverse_z_extended);
-
-	// 构建一个行向量，所有元素都是1
-	cv::Mat onesRow = cv::Mat::ones(1, pixels.cols, pixels.type());
-
-	// 获取要检查的行
-	cv::Mat targetRow = pixels.row(2);
-
-	// 使用 cv::compare 检查行是否全部为1
-	cv::Mat comparisonResult;
-	cv::compare(targetRow, onesRow, comparisonResult, cv::CMP_EQ);
-
-	// depth_in_rgb: 存储转换至rgb图像下的深度图
-	cv::Mat depth_in_rgb = cv::Mat::zeros(IMAGE_HEIGHT_480, IMAGE_WIDTH_640, CV_16U);
-
-	cv::Mat map_x = cv::Mat::zeros(depth_map.size(), CV_32FC1);
-	cv::Mat map_y = cv::Mat::zeros(depth_map.size(), CV_32FC1);
-
-
-	//cv::Mat map_x_mask = cv::Mat::zeros(IMAGE_HEIGHT_480, IMAGE_WIDTH_640, CV_16U);
-	// 使用 OpenMP 并行化外层循环
-	//#pragma omp parallel for
-	for (int y = 0; y < IMAGE_HEIGHT_480; ++y)
-	{
-		int column__ = y * IMAGE_WIDTH_640;
-		for (int x = 0; x < IMAGE_WIDTH_640; ++x)
-		{
-			// 计算原始depth(x, y)处的深度值应该在rgb下的位置(x_inrgb, y_inrgb)
-			//int column = y * IMAGE_WIDTH_640 + x;
-			int column = column__ + x;
-			float x_inrgb = pixels.at<float>(0, column);
-			float y_inrgb = pixels.at<float>(1, column);
-
-			if (y_inrgb >= 1 && y_inrgb <= IMAGE_HEIGHT_480 - 1 && x_inrgb >= 1 && x_inrgb <= IMAGE_WIDTH_640 - 1)
-			{
-
-				map_x.at<float>(y_inrgb, x_inrgb) = x;
-				map_y.at<float>(y_inrgb, x_inrgb) = y;
-
-			}
-
-		}
-	}
-
-
-
-	cv::remap(depth_map, depth_in_rgb, map_x, map_y, cv::INTER_LANCZOS4, cv::BORDER_REPLICATE, cv::Scalar());
-	//（1）INTER_NEAREST——最近邻插值
-	//（2）INTER_LINEAR——双线性插值（默认）
-	//（3）INTER_CUBIC——双三样条插值（逾4×4像素邻域内的双三次插值）
-	// (4）INTER_LANCZOS4——lanczos插值（逾8×8像素邻域的Lanczos插值）
-
-	return depth_in_rgb;
-
-}
+//void printMatrixInfo(const cv::Mat& matrix, const std::string& name) {
+//	std::cout << "Matrix: " << name << "\n";
+//	std::cout << "Type: " << matrix.type() << "\n";
+//	//std::cout << "Size: " << matrix.size() << "\n";
+//	std::cout << "shape: " << "[" << matrix.size().height << ", " << matrix.size().width << "]" << "\n";
+//	std::cout << "Channels: " << matrix.channels() << "\n";
+//	std::cout << "Depth: " << matrix.depth() << "\n";
+//	std::cout << "------------------------------------\n";
+//}
+//
+//void hMirrorTrans(const cv::Mat& src, cv::Mat& dst)
+//{
+//	dst.create(src.rows, src.cols, src.type());
+//
+//	int rows = src.rows;
+//	int cols = src.cols;
+//
+//	auto datatype = src.type();
+//
+//	switch (src.channels())
+//	{
+//	case 1:   //1通道比如深度图像
+//		if (datatype == CV_16UC1)
+//		{
+//			const ushort* origal;
+//			ushort* p;
+//			for (int i = 0; i < rows; i++) {
+//				origal = src.ptr<ushort>(i);
+//				p = dst.ptr<ushort>(i);
+//				for (int j = 0; j < cols; j++) {
+//					p[j] = origal[cols - 1 - j];
+//				}
+//			}
+//		}
+//		else if (datatype == CV_8U)
+//		{
+//			const uchar* origal;
+//			uchar* p;
+//			for (int i = 0; i < rows; i++) {
+//				origal = src.ptr<uchar>(i);
+//				p = dst.ptr<uchar>(i);
+//				for (int j = 0; j < cols; j++) {
+//					p[j] = origal[cols - 1 - j];
+//				}
+//			}
+//		}
+//
+//		break;
+//	case 3:   //3通道比如彩色图像
+//		const cv::Vec3b * origal3;
+//		cv::Vec3b* p3;
+//		for (int i = 0; i < rows; i++) {
+//			origal3 = src.ptr<cv::Vec3b>(i);
+//			p3 = dst.ptr<cv::Vec3b>(i);
+//			for (int j = 0; j < cols; j++) {
+//				p3[j] = origal3[cols - 1 - j];
+//			}
+//		}
+//		break;
+//	default:
+//		break;
+//	}
+//
+//}
+//
+//
+//
+//
+//cv::Mat Get3DPoints(const cv::Mat& depth, const cv::Mat& pixels_to_points_map)
+//{
+//	//cv::Mat points(IMAGE_HEIGHT_480, IMAGE_WIDTH_640, CV_64FC3);
+//	cv::Mat points(3, IMAGE_HEIGHT_480 * IMAGE_WIDTH_640, CV_32F);
+//
+//	// 对depth进行reshape操作，操作后的大小为[1, 640*480]
+//	cv::Mat depth_flatten = depth.reshape(1, 1);
+//
+//	// 将depth_flatten中的每个元素复制到三行
+//	cv::Mat depth_flatten_3 = cv::repeat(depth_flatten, 3, 1);
+//
+//	//转为float
+//	cv::Mat depth_flatten_3_float;
+//	depth_flatten_3.convertTo(depth_flatten_3_float, CV_32F);
+//
+//	cv::multiply(depth_flatten_3_float, pixels_to_points_map, points);
+//
+//	return points;
+//}
+//
+//
+//
+//cv::Mat GetPixels(const cv::Mat& points, const cv::Mat& camera_matrix, const cv::Mat& depth_map)
+//{
+//	// 得到深度图每个点对应在rgb图像中的像素
+//	cv::Mat pixels = camera_matrix * points;
+//
+//	// 获取第三行的元素
+//	cv::Mat z = pixels.row(2);
+//
+//	// 创建一个矩阵，每个元素都是对应列的第三行元素的倒数
+//	cv::Mat inverse_z;
+//	cv::divide(1.0, z, inverse_z);
+//	cv::Mat inverse_z_extended = cv::repeat(inverse_z, 3, 1); // [1, 480*640] -> [3, 480*640]
+//
+//	// 将原始矩阵与倒数矩阵逐元素相乘
+//	pixels = pixels.mul(inverse_z_extended);
+//
+//	// 构建一个行向量，所有元素都是1
+//	cv::Mat onesRow = cv::Mat::ones(1, pixels.cols, pixels.type());
+//
+//	// 获取要检查的行
+//	cv::Mat targetRow = pixels.row(2);
+//
+//	// 使用 cv::compare 检查行是否全部为1
+//	cv::Mat comparisonResult;
+//	cv::compare(targetRow, onesRow, comparisonResult, cv::CMP_EQ);
+//
+//	// depth_in_rgb: 存储转换至rgb图像下的深度图
+//	cv::Mat depth_in_rgb = cv::Mat::zeros(IMAGE_HEIGHT_480, IMAGE_WIDTH_640, CV_16U);
+//
+//	cv::Mat map_x = cv::Mat::zeros(depth_map.size(), CV_32FC1);
+//	cv::Mat map_y = cv::Mat::zeros(depth_map.size(), CV_32FC1);
+//
+//
+//	//cv::Mat map_x_mask = cv::Mat::zeros(IMAGE_HEIGHT_480, IMAGE_WIDTH_640, CV_16U);
+//	// 使用 OpenMP 并行化外层循环
+//	//#pragma omp parallel for
+//	for (int y = 0; y < IMAGE_HEIGHT_480; ++y)
+//	{
+//		int column__ = y * IMAGE_WIDTH_640;
+//		for (int x = 0; x < IMAGE_WIDTH_640; ++x)
+//		{
+//			// 计算原始depth(x, y)处的深度值应该在rgb下的位置(x_inrgb, y_inrgb)
+//			//int column = y * IMAGE_WIDTH_640 + x;
+//			int column = column__ + x;
+//			float x_inrgb = pixels.at<float>(0, column);
+//			float y_inrgb = pixels.at<float>(1, column);
+//
+//			if (y_inrgb >= 1 && y_inrgb <= IMAGE_HEIGHT_480 - 1 && x_inrgb >= 1 && x_inrgb <= IMAGE_WIDTH_640 - 1)
+//			{
+//
+//				map_x.at<float>(y_inrgb, x_inrgb) = x;
+//				map_y.at<float>(y_inrgb, x_inrgb) = y;
+//
+//			}
+//
+//		}
+//	}
+//
+//
+//
+//	cv::remap(depth_map, depth_in_rgb, map_x, map_y, cv::INTER_LANCZOS4, cv::BORDER_REPLICATE, cv::Scalar());
+//	//（1）INTER_NEAREST——最近邻插值
+//	//（2）INTER_LINEAR——双线性插值（默认）
+//	//（3）INTER_CUBIC——双三样条插值（逾4×4像素邻域内的双三次插值）
+//	// (4）INTER_LANCZOS4——lanczos插值（逾8×8像素邻域的Lanczos插值）
+//
+//	return depth_in_rgb;
+//
+//}
 
 
 
@@ -416,116 +355,39 @@ int main()
 {
 	try {
 
-		std::string  depth_video_path = "D:/aaaLab/aaagraduate/SaveVideo/DepthSavePoll/depth_0.avi";
-		std::string  rgb_video_path = "D:/aaaLab/aaagraduate/SaveVideo/DepthSavePoll/rgb_0.avi";
+		//std::string  depth_video_path = "D:/aaaLab/aaagraduate/SaveVideo/DepthSavePoll/depth_0.avi";
+		//std::string  rgb_video_path = "D:/aaaLab/aaagraduate/SaveVideo/DepthSavePoll/rgb_0.avi";
 		// 存储成图片形式的地址
-		std::string  depth_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/src/DepthImgs";
-		std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/src/RGBImgs";
+		std::string  depth_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240314/DepthImgs1";
+		std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240314/RGBImgs1";
 
 
-		//openni::Status rc = openni::STATUS_OK;
+		CameraModel camera_model;
 
-		//// 初始化OpenNI环境
-		//openni::OpenNI::initialize();
+		//// RGB相机内外参
+		//cv::Mat RGBCameraMatrix = (cv::Mat_<float>(3, 3) << 597.4286735057399, 0, 356.4896812646391,
+		//	0, 590.3135817242555, 265.6565473501195,
+		//	0, 0, 1);
+		//cv::Mat RGBCameraMatrix_inv = RGBCameraMatrix.inv();
+		//cv::Mat RGBDistCoeffs = (cv::Mat_<float>(1, 5) << 0.02433779150902952, 0.1806910557398652, 0.01504073394057258, 0.01982505451991676, -0.4655100996385541);
+		//cv::Mat RGBRotVec = (cv::Mat_<float>(1, 3) << 0.1264627521012061, 0.5634184176200842, 1.660489725237417);
+		//cv::Mat RGBTransVec = (cv::Mat_<float>(1, 3) << 3.294513374873486, -4.191418478429084, 20.54231028621967);
+		//cv::Mat RGBRotationMat;
+		//cv::Rodrigues(RGBRotVec, RGBRotationMat);
 
-		//showdevice();
+		//// 深度相机内外参
+		//cv::Mat DepthCameraMatrix = (cv::Mat_<float>(3, 3) << 569.1382523087108, 0, 330.4704844461951,
+		//	0, 564.5139460154893, 250.400178575307,
+		//	0, 0, 1);
+		//cv::Mat DepthCameraMatrix_inv = DepthCameraMatrix.inv();
+		//cv::Mat DepthDistCoeffs = (cv::Mat_<float>(1, 5) << -0.1802622269847234, 0.9963006566582099, -0.001074564774769674, 0.002966307587880594, -2.140745337976587);
+		//cv::Mat DepthRotVec = (cv::Mat_<float>(1, 3) << 0.1313875859188382, 0.62437610031627, 1.648945446919959);
+		//cv::Mat DepthTransVec = (cv::Mat_<float>(1, 3) << 6.166359975994443, -3.53947047998281, 20.74186807903174);
+		//cv::Mat DepthRotationMat;
+		//cv::Rodrigues(DepthRotVec, DepthRotationMat);
 
-		//// 声明并打开Device设备。
-		//openni::Device xtion;
-		//const char* deviceURL = openni::ANY_DEVICE;  //设备名
-		//rc = xtion.open(deviceURL);
-
-
-		//// 创建深度数据流
-		//openni::VideoStream streamDepth;
-		//rc = streamDepth.create(xtion, openni::SENSOR_DEPTH);
-		//if (rc == openni::STATUS_OK)
-		//{
-		//	// 设置深度图像视频模式
-		//	openni::VideoMode mModeDepth;
-		//	// 分辨率大小
-		//	mModeDepth.setResolution(640, 480);
-		//	// 每秒30帧
-		//	mModeDepth.setFps(30);
-		//	// 像素格式
-		//	mModeDepth.setPixelFormat(openni::PIXEL_FORMAT_DEPTH_1_MM);
-
-		//	streamDepth.setVideoMode(mModeDepth);
-
-		//	int nFilterEnable = 0;
-		//	int dataSize = 4;
-		//	//streamDepth.setProperty(XN_STREAM_PROPERTY_HOLE_FILTER, (uint8_t*)&nFilterEnable, dataSize);
-
-		//	// 打开深度数据流
-		//	rc = streamDepth.start();
-		//	if (rc != openni::STATUS_OK)
-		//	{
-		//		cerr << "无法打开深度数据流：" << openni::OpenNI::getExtendedError() << endl;
-		//		streamDepth.destroy();
-		//	}
-		//}
-		//else
-		//{
-		//	cerr << "无法创建深度数据流：" << openni::OpenNI::getExtendedError() << endl;
-		//}
-
-
-
-		//openni::Array<openni::DeviceInfo> aDeviceList;
-		//openni::OpenNI::enumerateDevices(&aDeviceList);
-		//const openni::DeviceInfo& rDevInfo = aDeviceList[0];
-		////cv::VideoCapture cap(rDevInfo.getUsbProductId());
-		//cv::VideoCapture imgCap(0);
-
-		//// 检查摄像头是否成功打开
-		//if (!imgCap.isOpened()) {
-		//	std::cerr << "Error: Unable to open camera." << std::endl;
-		//	return -1;
-		//}
-
-		//// 设置摄像头参数（可选）
-		//// 例如，设置分辨率
-		//imgCap.set(cv::CAP_PROP_FRAME_WIDTH, 640);
-		//imgCap.set(cv::CAP_PROP_FRAME_HEIGHT, 480);
-
-
-
-
-		//// 创建OpenCV图像窗口
-		////namedWindow("Depth Image", CV_WINDOW_AUTOSIZE);
-		////namedWindow("Color Image", CV_WINDOW_AUTOSIZE);
-
-		//// 获得最大深度值
-		//int iMaxDepth = streamDepth.getMaxPixelValue();
-
-		//// 循环读取数据流信息并保存在VideoFrameRef中
-		//openni::VideoFrameRef  frameDepth;
-		////VideoFrameRef  frameColor;
-
-		// RGB相机内外参
-		cv::Mat RGBCameraMatrix = (cv::Mat_<float>(3, 3) << 597.4286735057399, 0, 356.4896812646391,
-			0, 590.3135817242555, 265.6565473501195,
-			0, 0, 1);
-		cv::Mat RGBCameraMatrix_inv = RGBCameraMatrix.inv();
-		cv::Mat RGBDistCoeffs = (cv::Mat_<float>(1, 5) << 0.02433779150902952, 0.1806910557398652, 0.01504073394057258, 0.01982505451991676, -0.4655100996385541);
-		cv::Mat RGBRotVec = (cv::Mat_<float>(1, 3) << 0.1264627521012061, 0.5634184176200842, 1.660489725237417);
-		cv::Mat RGBTransVec = (cv::Mat_<float>(1, 3) << 3.294513374873486, -4.191418478429084, 20.54231028621967);
-		cv::Mat RGBRotationMat;
-		cv::Rodrigues(RGBRotVec, RGBRotationMat);
-
-		// 深度相机内外参
-		cv::Mat DepthCameraMatrix = (cv::Mat_<float>(3, 3) << 569.1382523087108, 0, 330.4704844461951,
-			0, 564.5139460154893, 250.400178575307,
-			0, 0, 1);
-		cv::Mat DepthCameraMatrix_inv = DepthCameraMatrix.inv();
-		cv::Mat DepthDistCoeffs = (cv::Mat_<float>(1, 5) << -0.1802622269847234, 0.9963006566582099, -0.001074564774769674, 0.002966307587880594, -2.140745337976587);
-		cv::Mat DepthRotVec = (cv::Mat_<float>(1, 3) << 0.1313875859188382, 0.62437610031627, 1.648945446919959);
-		cv::Mat DepthTransVec = (cv::Mat_<float>(1, 3) << 6.166359975994443, -3.53947047998281, 20.74186807903174);
-		cv::Mat DepthRotationMat;
-		cv::Rodrigues(DepthRotVec, DepthRotationMat);
-
-		// 深度相机转到RGB相机的R和T  P_rgb = R * P_ir + T
-		cv::Mat R = RGBRotationMat * DepthRotationMat.inv();
+		//// 深度相机转到RGB相机的R和T  P_rgb = R * P_ir + T
+		//cv::Mat R = RGBRotationMat * DepthRotationMat.inv();
 		//std::cout << R << "\n";
 		//std::cout << RGBTransVec << "\n";
 		//std::cout << DepthTransVec << "\n";
@@ -533,8 +395,8 @@ int main()
 		//std::cout << "RGBTransVec size: " << RGBTransVec.size() << std::endl;
 		//std::cout << "DepthTransVec size: " << DepthTransVec.size() << std::endl;
 		//std::cout << "R size: " << R.size() << std::endl;
-		float squaresize = 12;
-		cv::Mat T = (RGBTransVec.t() - R * DepthTransVec.t()) * squaresize;
+		//float squaresize = 12;
+		//cv::Mat T = (RGBTransVec.t() - R * DepthTransVec.t()) * squaresize;
 
 		// 计算像素到对应空间点坐标映射关系
 		cv::Mat homogeneous_coords_all(3, IMAGE_HEIGHT_480 * IMAGE_WIDTH_640, CV_32F);
@@ -549,10 +411,10 @@ int main()
 				homogeneous_coords_all.at<float>(1, column) = y;
 			}
 		}
-		cv::Mat pixels_to_points = DepthCameraMatrix_inv * homogeneous_coords_all;
-
+		cv::Mat pixels_to_points = camera_model.DepthCameraMatrix_inv * homogeneous_coords_all;
 		// 记录循环次数
 		int count = 0;
+		//std::cout << "23332333233" << '\n';
 
 		//while (true)
 		//{
@@ -596,8 +458,8 @@ int main()
 		//cv::namedWindow("Combined Images", cv::WINDOW_NORMAL);
 		//cv::resizeWindow("Combined Images", 640 * 2, 480);  // 设置窗口大小
 		//std::cout << rgbPathList[i] << "\n";
-		std::string rgb_file_name = rgb_folder_path + "/rgb_19.png";  // 83 576
-		std::string depth_file_name = depth_folder_path + "/depth_19.png";
+		std::string rgb_file_name = rgb_folder_path + "/rgb_000122.png";  // 83 576
+		std::string depth_file_name = depth_folder_path + "/depth_000122.png";
 		std::cout << rgb_file_name << "\n";
 		cv::Mat rgb = cv::imread(rgb_file_name);
 		cv::Mat depth = cv::imread(depth_file_name, cv::IMREAD_UNCHANGED);
@@ -609,7 +471,7 @@ int main()
 		else {
 			std::cerr << "Failed to load image." << std::endl;
 		}
-		printMatrixInfo(depth, "depth");
+		camera_model.printMatrixInfo(depth, "depth");
 
 		//cv::Mat combinedImage;
 		//cv::hconcat(rgb, depth, combinedImage);
@@ -617,14 +479,17 @@ int main()
 
 		// 获得深度图每个像素点对应的3D空间坐标 (x, y, z)
 		//cv::Mat points = Get3DPoints(hImageDepth, pixels_to_points);
-		cv::Mat points = Get3DPoints(depth, pixels_to_points);
+		cv::Mat points = camera_model.Get3DPoints(depth, pixels_to_points);
 
 
-		cv::Mat T_extended = cv::repeat(T, 1, IMAGE_HEIGHT_480 * IMAGE_WIDTH_640); // [3, 1] -> [3, 480*640]
-		cv::Mat points_inrgb = R * points + T_extended; // points应该化成(3, 1)的样子，不急，回来改
+		cv::Mat T_extended = cv::repeat(camera_model.T_depth2rgb, 1, IMAGE_HEIGHT_480 * IMAGE_WIDTH_640); // [3, 1] -> [3, 480*640]
+		cv::Mat points_inrgb = camera_model.R_depth2rgb * points + T_extended; // points应该化成(3, 1)的样子，不急，回来改
 
 		//cv::Mat depth_inrgb = GetPixels(points_inrgb, RGBCameraMatrix, hImageDepth);
-		cv::Mat depth_inrgb = GetPixels(points_inrgb, RGBCameraMatrix, depth);
+		cv::Mat depth_inrgb = camera_model.GetPixels(points_inrgb, camera_model.RGBCameraMatrix, depth);
+
+		// 中值滤波处理，先测试一下 (Kun: 2024.3.7)
+		cv::medianBlur(depth_inrgb, depth_inrgb, 5);
 
 		double max_depth_value;
 		// 使用 cv::minMaxLoc 函数获取最大值和位置
@@ -652,6 +517,7 @@ int main()
 		//cv::addWeighted(depth_inrgb_color, depthweight, frame, (1 - depthweight), 0.0, rgb_depth);
 		cv::addWeighted(depth_inrgb_color, depthweight, rgb, (1 - depthweight), 0.0, rgb_depth);
 		cv::imshow("Mixed", rgb_depth);
+
 
 
 

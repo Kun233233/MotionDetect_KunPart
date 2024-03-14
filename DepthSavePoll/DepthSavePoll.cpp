@@ -109,8 +109,10 @@ int main()
 		std::string  depth_video_path = "D:/aaaLab/aaagraduate/SaveVideo/DepthSavePoll/depth_0.avi";
 		std::string  rgb_video_path = "D:/aaaLab/aaagraduate/SaveVideo/DepthSavePoll/rgb_0.avi";
 		// 存储成图片形式的地址
-		std::string  depth_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/src/DepthImgs";
-		std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/src/RGBImgs";
+		//std::string  depth_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/DepthImgs";
+		//std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/RGBImgs";
+		std::string  depth_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240314/DepthImgs";
+		std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240314/RGBImgs";
 
 
 		Status rc = STATUS_OK;
@@ -458,9 +460,9 @@ int main()
 			count++;
 
 
-			std::ostringstream depth_file_name_stream;
-			depth_file_name_stream << depth_folder_path << "/depth_" << std::setfill('0') << std::setw(6) << count << ".png";
-			std::string depth_file_name = depth_file_name_stream.str();
+			//std::ostringstream depth_file_name_stream;
+			//depth_file_name_stream << depth_folder_path << "/depth_" << std::setfill('0') << std::setw(6) << count << ".png";
+			//std::string depth_file_name = depth_file_name_stream.str();
 
 
 

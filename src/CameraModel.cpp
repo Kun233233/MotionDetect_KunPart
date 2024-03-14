@@ -1,28 +1,53 @@
 #include "CameraModel.h"
 
-CameraModel::CameraModel(int max_depth)
+CameraModel::CameraModel()
 {
-	this->max_depth = max_depth;
-	this->square_size = 12.0;
+	//this->max_depth = max_depth;
+	//this->square_size = 12.0f;
+	//this->square_size = 10.0f; // 新标定板
+	this->square_size = 1.0f; // 新标定板
+
 
 	// 对于两个相机的参数，目前先写死，后续可以改为读取外部文件获取
 	// RGB相机内外参
-	this->RGBCameraMatrix = (cv::Mat_<float>(3, 3) << 597.4286735057399, 0, 356.4896812646391,
-														0, 590.3135817242555, 265.6565473501195,
-														0, 0, 1);
+	//this->RGBCameraMatrix = (cv::Mat_<float>(3, 3) << 597.4286735057399, 0, 356.4896812646391,
+	//													0, 590.3135817242555, 265.6565473501195,
+	//													0, 0, 1);
+	//this->RGBCameraMatrix_inv = RGBCameraMatrix.inv();
+	//this->RGBDistCoeffs = (cv::Mat_<float>(1, 5) << 0.02433779150902952, 0.1806910557398652, 0.01504073394057258, 0.01982505451991676, -0.4655100996385541);
+	//this->RGBRotVec = (cv::Mat_<float>(1, 3) << 0.1264627521012061, 0.5634184176200842, 1.660489725237417);
+	//this->RGBTransVec = (cv::Mat_<float>(1, 3) << 3.294513374873486, -4.191418478429084, 20.54231028621967);
+
+	// 新标定板版本 RGB
+	this->RGBCameraMatrix = (cv::Mat_<float>(3, 3) << 604.2085370195251, 0, 322.6278592922915,
+		0, 603.6937227693994, 235.528460406989,
+		0, 0, 1);
 	this->RGBCameraMatrix_inv = RGBCameraMatrix.inv();
-	this->RGBDistCoeffs = (cv::Mat_<float>(1, 5) << 0.02433779150902952, 0.1806910557398652, 0.01504073394057258, 0.01982505451991676, -0.4655100996385541);
-	this->RGBRotVec = (cv::Mat_<float>(1, 3) << 0.1264627521012061, 0.5634184176200842, 1.660489725237417);
-	this->RGBTransVec = (cv::Mat_<float>(1, 3) << 3.294513374873486, -4.191418478429084, 20.54231028621967);
+	this->RGBDistCoeffs = (cv::Mat_<float>(1, 5) << -0.05016507932123436, 0.9997269173615618, -0.002050126664809821, -0.001327504815864807, -2.590438793150333);
+	this->RGBRotVec = (cv::Mat_<float>(1, 3) << -0.035437177821607, 0.003173871812315727, -1.518335793783583);
+	this->RGBTransVec = (cv::Mat_<float>(1, 3) << -33.72928752337317, 57.33939261054579, 321.5652351953804);
+
 	cv::Rodrigues(this->RGBRotVec, this->RGBRotationMat);
 
-	// 深度相机内外参
-	this->DepthCameraMatrix = (cv::Mat_<float>(3, 3) << 569.1382523087108, 0, 330.4704844461951,
-		0, 564.5139460154893, 250.400178575307,
+	//// 深度相机内外参
+	//this->DepthCameraMatrix = (cv::Mat_<float>(3, 3) << 569.1382523087108, 0, 330.4704844461951,
+	//	0, 564.5139460154893, 250.400178575307,
+	//	0, 0, 1);
+	//this->DepthCameraMatrix_inv = DepthCameraMatrix.inv();
+	//this->DepthDistCoeffs = (cv::Mat_<float>(1, 5) << -0.1802622269847234, 0.9963006566582099, -0.001074564774769674, 0.002966307587880594, -2.140745337976587);
+	//this->DepthRotVec = (cv::Mat_<float>(1, 3) << 0.1313875859188382, 0.62437610031627, 1.648945446919959);
+	//this->DepthTransVec = (cv::Mat_<float>(1, 3) << 6.166359975994443, -3.53947047998281, 20.74186807903174);
+	
+	// 新标定板版本 Depth
+	this->DepthCameraMatrix = (cv::Mat_<float>(3, 3) << 574.7477649150313, 0, 326.6927782733942,
+		0, 573.8775739319774, 240.8218767510635,
 		0, 0, 1);
 	this->DepthCameraMatrix_inv = DepthCameraMatrix.inv();
-	this->DepthDistCoeffs = (cv::Mat_<float>(1, 5) << -0.1802622269847234, 0.9963006566582099, -0.001074564774769674, 0.002966307587880594, -2.140745337976587);
-	this->DepthRotVec = (cv::Mat_<float>(1, 3) << 0.1313875859188382, 0.62437610031627, 1.648945446919959);
+	this->DepthDistCoeffs = (cv::Mat_<float>(1, 5) << -0.1249797724089348, 0.6554742403337946, -0.001983882261750233, -0.0009005479294426705, -1.318633314574677);
+	this->DepthRotVec = (cv::Mat_<float>(1, 3) << -0.0337157754012347, -0.01083893881602162, -1.521085578010777);
+	this->DepthTransVec = (cv::Mat_<float>(1, 3) << -12.18319909637389, 56.86704911511715, 322.6538039972514);
+	
+	
 	cv::Rodrigues(this->DepthRotVec, this->DepthRotationMat);
 
 	this->R_depth2rgb = RGBRotationMat * DepthRotationMat.inv();

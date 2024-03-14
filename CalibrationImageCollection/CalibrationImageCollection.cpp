@@ -105,8 +105,8 @@ int main()
 	try {
 
 		// 存储成图片形式的地址
-		std::string  depth_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/src/Calibration/Depth";
-		std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/src/Calibration/RGB";
+		std::string  depth_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/Calibration/Depth";
+		std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/Calibration/RGB";
 
 
 		Status rc = STATUS_OK;

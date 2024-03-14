@@ -33,6 +33,9 @@
 #include <pcl/visualization/cloud_viewer.h>
 #include <pcl/console/parse.h>
 
+# include "CameraModel.h"
+# include "Utility.h"
+
 
 //RGB w x h
 const int IMAGE_WIDTH_640 = 640;
@@ -51,15 +54,15 @@ enum class FeatureID
 	RightL	= 43,
 	RightR	= 46, 
 	NoseTop	= 34, 
-	MouseTop= 32
+	MouseTop= 52
 };
 
-const std::vector<int> feature_id_series = {	static_cast<int>(FeatureID::MouseTop),	
-												static_cast<int>(FeatureID::NoseTop),
+const std::vector<int> feature_id_series = {	static_cast<int>(FeatureID::NoseTop),
 												static_cast<int>(FeatureID::LeftL), 
 												static_cast<int>(FeatureID::LeftR), 
 												static_cast<int>(FeatureID::RightL), 
-												static_cast<int>(FeatureID::RightR)
+												static_cast<int>(FeatureID::RightR), 
+												static_cast<int>(FeatureID::MouseTop),
 												 };
 
 
@@ -86,139 +89,6 @@ void showdevice() {
 
 	}
 }
-
-void printMatrixInfo(const cv::Mat& matrix, const std::string& name) {
-	std::cout << "Matrix: " << name << "\n";
-	std::cout << "Type: " << matrix.type() << "\n";
-	//std::cout << "Size: " << matrix.size() << "\n";
-	std::cout << "shape: " << "[" << matrix.size().height << ", " << matrix.size().width << "]" << "\n";
-	std::cout << "Channels: " << matrix.channels() << "\n";
-	std::cout << "Depth: " << matrix.depth() << "\n";
-	std::cout << "------------------------------------\n";
-}
-
-void hMirrorTrans(const cv::Mat& src, cv::Mat& dst)
-{
-	dst.create(src.rows, src.cols, src.type());
-
-	int rows = src.rows;
-	int cols = src.cols;
-
-	auto datatype = src.type();
-
-	switch (src.channels())
-	{
-	case 1:   //1通道比如深度图像
-		if (datatype == CV_16UC1)
-		{
-			const ushort* origal;
-			ushort* p;
-			for (int i = 0; i < rows; i++) {
-				origal = src.ptr<ushort>(i);
-				p = dst.ptr<ushort>(i);
-				for (int j = 0; j < cols; j++) {
-					p[j] = origal[cols - 1 - j];
-				}
-			}
-		}
-		else if (datatype == CV_8U)
-		{
-			const uchar* origal;
-			uchar* p;
-			for (int i = 0; i < rows; i++) {
-				origal = src.ptr<uchar>(i);
-				p = dst.ptr<uchar>(i);
-				for (int j = 0; j < cols; j++) {
-					p[j] = origal[cols - 1 - j];
-				}
-			}
-		}
-
-		break;
-	case 3:   //3通道比如彩色图像
-		const cv::Vec3b * origal3;
-		cv::Vec3b* p3;
-		for (int i = 0; i < rows; i++) {
-			origal3 = src.ptr<cv::Vec3b>(i);
-			p3 = dst.ptr<cv::Vec3b>(i);
-			for (int j = 0; j < cols; j++) {
-				p3[j] = origal3[cols - 1 - j];
-			}
-		}
-		break;
-	default:
-		break;
-	}
-
-}
-
-std::string getValueAt(std::ifstream& file, int targetRow, int targetColumn, char delimiter) {
-	std::string line;
-
-	// 逐行读取文件内容
-	for (int currentRow = 1; std::getline(file, line); ++currentRow) {
-		if (currentRow == targetRow) {
-			// 使用字符串流解析每一行的数据
-			std::istringstream iss(line);
-			std::string value;
-			std::vector<std::string> values;
-
-			// 使用字段分隔符拆分每一行的数据
-			while (std::getline(iss, value, delimiter)) {
-				values.push_back(value);
-			}
-
-			// 检查目标列是否在有效范围内
-			if (targetColumn >= 1 && targetColumn <= values.size()) {
-				return values[targetColumn - 1]; // 返回目标列的值
-			}
-			else {
-				std::cerr << "Error: Column " << targetColumn << " out of range." << std::endl;
-				return "";
-			}
-		}
-	}
-
-	// 如果文件中未找到目标行
-	std::cerr << "Error: Row " << targetRow << " not found." << std::endl;
-	return "";
-}
-
-
-
-// 函数将二维字符串数组存储为txt文件，使用指定分隔符
-void saveToTxt(const std::vector<std::vector<std::string>>& data, const std::string& filename, char delimiter) {
-	// 打开文件流
-	std::ofstream outfile(filename);
-
-	// 检查文件是否成功打开
-	if (!outfile.is_open()) {
-		std::cerr << "Error opening file: " << filename << std::endl;
-		return;
-	}
-
-	// 遍历二维数组并将数据写入文件
-	for (const auto& row : data) {
-		for (size_t i = 0; i < row.size(); ++i) {
-			outfile << row[i];
-
-			// 在每个元素后面添加分隔符，除了最后一个元素
-			if (i < row.size() - 1) {
-				outfile << delimiter;
-			}
-		}
-		// 换行表示新的一行
-		outfile << std::endl;
-	}
-
-	// 关闭文件流
-	outfile.close();
-}
-
-
-
-
-
 
 auto GetFeaturePointsPixels(const std::string& feature_rgb_path, std::vector<std::vector<std::string>>& feature_pixels_position, char delimiter)
 {
@@ -267,142 +137,6 @@ auto GetFeaturePointsPixels(const std::string& feature_rgb_path, std::vector<std
 
 
 
-cv::Mat Get3DPoints(const cv::Mat& depth, const cv::Mat& pixels_to_points_map)
-{
-	//cv::Mat points(IMAGE_HEIGHT_480, IMAGE_WIDTH_640, CV_64FC3);
-	cv::Mat points(3, IMAGE_HEIGHT_480 * IMAGE_WIDTH_640, CV_32F);
-
-	// 对depth进行reshape操作，操作后的大小为[1, 640*480]
-	cv::Mat depth_flatten = depth.reshape(1, 1);
-
-	// 将depth_flatten中的每个元素复制到三行
-	cv::Mat depth_flatten_3 = cv::repeat(depth_flatten, 3, 1);
-
-	//转为float
-	cv::Mat depth_flatten_3_float;
-	depth_flatten_3.convertTo(depth_flatten_3_float, CV_32F);
-
-	cv::multiply(depth_flatten_3_float, pixels_to_points_map, points);
-
-	return points;
-}
-
-
-
-cv::Mat GetPixels(const cv::Mat& points, const cv::Mat& camera_matrix, const cv::Mat& depth_map)
-{
-	// 得到深度图每个点对应在rgb图像中的像素
-	cv::Mat pixels = camera_matrix * points;
-
-	// 获取第三行的元素
-	cv::Mat z = pixels.row(2);
-
-	// 创建一个矩阵，每个元素都是对应列的第三行元素的倒数
-	cv::Mat inverse_z;
-	cv::divide(1.0, z, inverse_z);
-	cv::Mat inverse_z_extended = cv::repeat(inverse_z, 3, 1); // [1, 480*640] -> [3, 480*640]
-
-	// 将原始矩阵与倒数矩阵逐元素相乘
-	pixels = pixels.mul(inverse_z_extended);
-
-	// 构建一个行向量，所有元素都是1
-	cv::Mat onesRow = cv::Mat::ones(1, pixels.cols, pixels.type());
-
-	// 获取要检查的行
-	cv::Mat targetRow = pixels.row(2);
-
-	// 使用 cv::compare 检查行是否全部为1
-	cv::Mat comparisonResult;
-	cv::compare(targetRow, onesRow, comparisonResult, cv::CMP_EQ);
-
-	// depth_in_rgb: 存储转换至rgb图像下的深度图
-	cv::Mat depth_in_rgb = cv::Mat::zeros(IMAGE_HEIGHT_480, IMAGE_WIDTH_640, CV_16U);
-
-	cv::Mat map_x = cv::Mat::zeros(depth_map.size(), CV_32FC1);
-	cv::Mat map_y = cv::Mat::zeros(depth_map.size(), CV_32FC1);
-
-
-	//cv::Mat map_x_mask = cv::Mat::zeros(IMAGE_HEIGHT_480, IMAGE_WIDTH_640, CV_16U);
-	// 使用 OpenMP 并行化外层循环
-	//#pragma omp parallel for
-	for (int y = 0; y < IMAGE_HEIGHT_480; ++y)
-	{
-		int column__ = y * IMAGE_WIDTH_640;
-		for (int x = 0; x < IMAGE_WIDTH_640; ++x)
-		{
-			// 计算原始depth(x, y)处的深度值应该在rgb下的位置(x_inrgb, y_inrgb)
-			//int column = y * IMAGE_WIDTH_640 + x;
-			int column = column__ + x;
-			float x_inrgb = pixels.at<float>(0, column);
-			float y_inrgb = pixels.at<float>(1, column);
-
-			if (y_inrgb >= 1 && y_inrgb <= IMAGE_HEIGHT_480 - 1 && x_inrgb >= 1 && x_inrgb <= IMAGE_WIDTH_640 - 1)
-			{
-
-				map_x.at<float>(y_inrgb, x_inrgb) = x;
-				map_y.at<float>(y_inrgb, x_inrgb) = y;
-
-			}
-
-		}
-	}
-
-
-
-	cv::remap(depth_map, depth_in_rgb, map_x, map_y, cv::INTER_LANCZOS4, cv::BORDER_REPLICATE, cv::Scalar());
-	//（1）INTER_NEAREST——最近邻插值
-	//（2）INTER_LINEAR——双线性插值（默认）
-	//（3）INTER_CUBIC——双三样条插值（逾4×4像素邻域内的双三次插值）
-	// (4）INTER_LANCZOS4——lanczos插值（逾8×8像素邻域的Lanczos插值）
-
-	return depth_in_rgb;
-
-}
-
-
-
-cv::Mat PositionToMotion(const cv::Mat& p1, const cv::Mat& p2, const cv::Mat& p3, const cv::Mat& p4)
-{
-	std::cout << p1 << p2 << p3 << p4 << '\n';
-
-	cv::Mat p2_p3 = p2 - p3;
-	cv::Mat p1_p3 = p1 - p3;
-
-	// n1, n2, n3分别代表面部建立的三个坐标轴的方向
-	cv::Mat n1 = p2_p3.cross(p1_p3);
-	cv::normalize(n1, n1);
-	cv::Mat n2 = p2_p3 - p1_p3;
-	cv::normalize(n2, n2);
-	cv::Mat n3 = n1.cross(n2);
-
-	float a = std::asinf(n2.at<float>(2, 0) / n3.at<float>(2, 0));
-	float b = -std::asinf(n1.at<float>(2, 0));
-	float c = std::atan2f(n1.at<float>(1, 0), n1.at<float>(0, 0));
-
-	if (a > PI / 2) { a = PI - a; }
-	if (c > PI / 2) { c = PI - c; }
-
-	cv::Mat center_position = p4 - 80.0f * n1;
-	float x = center_position.at<float>(0, 0);
-	float y = center_position.at<float>(1, 0);
-	float z = center_position.at<float>(2, 0);
-
-	cv::Mat center_pose = (cv::Mat_<float>(6, 1) << x, y, z, a, b, c);
-
-
-	return center_pose;
-}
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -410,7 +144,6 @@ cv::Mat PositionToMotion(const cv::Mat& p1, const cv::Mat& p2, const cv::Mat& p3
 int main()
 {
 	try {
-
 		std::string  depth_video_path = "D:/aaaLab/aaagraduate/SaveVideo/DepthSavePoll/depth_0.avi";
 		std::string  rgb_video_path = "D:/aaaLab/aaagraduate/SaveVideo/DepthSavePoll/rgb_0.avi";
 		// 存储成图片形式的地址
@@ -436,6 +169,9 @@ int main()
 		rgb_count_file >> countmax;
 		// 关闭文件
 		rgb_count_file.close();
+		
+		CameraModel camera_model;
+		Utility utility;
 
 		// 创建一个 vector 用于存储每个元素
 		std::vector<std::vector<std::string>> feature_pixels_position(feature_num);
@@ -455,35 +191,6 @@ int main()
 
 		GetFeaturePointsPixels(feature_rgb_path, feature_pixels_position, '\t');
 
-
-
-		// RGB相机内外参
-		cv::Mat RGBCameraMatrix = (cv::Mat_<float>(3, 3) << 597.4286735057399, 0, 356.4896812646391,
-			0, 590.3135817242555, 265.6565473501195,
-			0, 0, 1);
-		cv::Mat RGBCameraMatrix_inv = RGBCameraMatrix.inv();
-		cv::Mat RGBDistCoeffs = (cv::Mat_<float>(1, 5) << 0.02433779150902952, 0.1806910557398652, 0.01504073394057258, 0.01982505451991676, -0.4655100996385541);
-		cv::Mat RGBRotVec = (cv::Mat_<float>(1, 3) << 0.1264627521012061, 0.5634184176200842, 1.660489725237417);
-		cv::Mat RGBTransVec = (cv::Mat_<float>(1, 3) << 3.294513374873486, -4.191418478429084, 20.54231028621967);
-		cv::Mat RGBRotationMat;
-		cv::Rodrigues(RGBRotVec, RGBRotationMat);
-
-		// 深度相机内外参
-		cv::Mat DepthCameraMatrix = (cv::Mat_<float>(3, 3) << 569.1382523087108, 0, 330.4704844461951,
-			0, 564.5139460154893, 250.400178575307,
-			0, 0, 1);
-		cv::Mat DepthCameraMatrix_inv = DepthCameraMatrix.inv();
-		cv::Mat DepthDistCoeffs = (cv::Mat_<float>(1, 5) << -0.1802622269847234, 0.9963006566582099, -0.001074564774769674, 0.002966307587880594, -2.140745337976587);
-		cv::Mat DepthRotVec = (cv::Mat_<float>(1, 3) << 0.1313875859188382, 0.62437610031627, 1.648945446919959);
-		cv::Mat DepthTransVec = (cv::Mat_<float>(1, 3) << 6.166359975994443, -3.53947047998281, 20.74186807903174);
-		cv::Mat DepthRotationMat;
-		cv::Rodrigues(DepthRotVec, DepthRotationMat);
-
-		// 深度相机转到RGB相机的R和T  P_rgb = R * P_ir + T
-		cv::Mat R = RGBRotationMat * DepthRotationMat.inv();
-		float squaresize = 12;
-		cv::Mat T = (RGBTransVec.t() - R * DepthTransVec.t()) * squaresize;
-
 		// 计算像素到对应空间点坐标映射关系
 		cv::Mat homogeneous_coords_all(3, IMAGE_HEIGHT_480 * IMAGE_WIDTH_640, CV_32F);
 		homogeneous_coords_all.row(2).setTo(1);
@@ -497,7 +204,7 @@ int main()
 				homogeneous_coords_all.at<float>(1, column) = y;
 			}
 		}
-		cv::Mat pixels_to_points = DepthCameraMatrix_inv * homogeneous_coords_all;
+		cv::Mat pixels_to_points = camera_model.DepthCameraMatrix_inv * homogeneous_coords_all;
 
 		// 记录循环次数
 		int count = 0;
@@ -529,14 +236,14 @@ int main()
 
 
 			// 获得深度图每个像素点对应的3D空间坐标 (x, y, z)
-			cv::Mat points = Get3DPoints(depth, pixels_to_points);
+			cv::Mat points = camera_model.Get3DPoints(depth, pixels_to_points);
 
 
-			cv::Mat T_extended = cv::repeat(T, 1, IMAGE_HEIGHT_480 * IMAGE_WIDTH_640); // [3, 1] -> [3, 480*640]
-			cv::Mat points_inrgb = R * points + T_extended; // points应该化成(3, 1)的样子，不急，回来改
+			cv::Mat T_extended = cv::repeat(camera_model.T_depth2rgb, 1, IMAGE_HEIGHT_480 * IMAGE_WIDTH_640); // [3, 1] -> [3, 480*640]
+			cv::Mat points_inrgb = camera_model.R_depth2rgb * points + T_extended; // points应该化成(3, 1)的样子，不急，回来改
 
 			//cv::Mat depth_inrgb = GetPixels(points_inrgb, RGBCameraMatrix, hImageDepth);
-			cv::Mat depth_inrgb = GetPixels(points_inrgb, RGBCameraMatrix, depth);
+			cv::Mat depth_inrgb = camera_model.GetPixels(points_inrgb, camera_model.RGBCameraMatrix, depth);
 
 			// 中值滤波处理，先测试一下 (Kun: 2024.3.7)
 			cv::medianBlur(depth_inrgb, depth_inrgb, 5);
@@ -570,7 +277,7 @@ int main()
 
 			// 显示帧
 			//cv::imshow("Camera Feed", frame);
-			cv::imshow("Camera Feed", rgb);
+			//cv::imshow("Camera Feed", rgb);
 
 
 			//std::ifstream file("D:/aaaLab/aaagraduate/SaveVideo/src/rgb.txt");
@@ -618,16 +325,18 @@ int main()
 
 					cv::Mat point = (cv::Mat_<float>(3, 1) << point_x, point_y, point_z);
 					position[feature_id] = point;
+
+					cv::Point feature(x, y);
+					cv::circle(rgb, feature, 3, cv::Scalar(0, 0, 255), -1); // 红色点，半径为5
 				}
 				else {
 					std::cerr << "Invalid index" << std::endl;
 				}
 
-				cv::Mat motion = PositionToMotion((position[2] + position[3]) / 2, (position[4] + position[5]) / 2, position[0], position[1]);
-
-
-
 			}
+			cv::imshow("Camera Feed", rgb);
+
+			cv::Mat motion = utility.PositionToMotion((position[1] + position[2]) / 2, (position[3] + position[4]) / 2, position[5], position[0]);
 
 
 			auto end_time = std::chrono::high_resolution_clock::now();
@@ -652,8 +361,8 @@ int main()
 
 		}
 		//file.close();
-		std::string feature_3D_path = "D:/aaaLab/aaagraduate/SaveVideo/src/points.txt";
-		saveToTxt(feature_pixels_3D, feature_3D_path, '\t');
+		std::string feature_3D_path = "D:/aaaLab/aaagraduate/SaveVideo/source/points.txt";
+		utility.saveToTxt(feature_pixels_3D, feature_3D_path, '\t');
 
 	}
 	catch (cv::Exception& e)

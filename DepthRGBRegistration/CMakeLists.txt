@@ -83,7 +83,9 @@ endif()
 file(GLOB SRC "*.h" 
 			"*.cpp" 
 			"../src/CameraModel.cpp"
+			"../src/Utility.cpp"
 			"../include/CameraModel.h"
+			"../include/Utility.h"
 )
 
 #add_executable(${TARGET} ${SRC_FILE})

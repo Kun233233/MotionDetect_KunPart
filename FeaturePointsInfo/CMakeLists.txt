@@ -10,6 +10,7 @@ find_package(PCL 1.14.0 REQUIRED COMPONENTS common io)
 include_directories(
     ../ThirdParty/Common
     ../ThirdParty/OpenNI2/Include
+    ../include
     # ../ThirdParty/OpenCV420/Windows/include
 	../ThirdParty/OpenCV470/opencv/build/include
     ../ThirdParty/UvcSwapper/Include
@@ -92,7 +93,13 @@ add_definitions(${PCL_DEFINITIONS})
 
 
 #set(SRC_FILE DepthSavePoll.cpp)
-file(GLOB SRC "*.h" "*.cpp")
+file(GLOB SRC "*.h" 
+			"*.cpp" 
+			"../src/CameraModel.cpp"
+			"../src/Utility.cpp"
+			"../include/CameraModel.h"
+			"../include/Utility.h"
+)
 
 #add_executable(${TARGET} ${SRC_FILE})
 add_executable(${TARGET} ${SRC})

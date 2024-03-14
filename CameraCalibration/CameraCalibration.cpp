@@ -7,11 +7,11 @@
 
 // 定义棋盘的尺寸
 //int CHECKERBOARD[2]{ 9,12 };
-//int CHECKERBOARD[2]{ 8,11 };
+int CHECKERBOARD[2]{ 8,11 };
 //int CHECKERBOARD[2]{ 7,10 };
-int CHECKERBOARD[2]{ 6,8 };
+//int CHECKERBOARD[2]{ 6,8 };
 //double squaresize = 12;
-double squaresize = 1;
+double squaresize = 10;
 
 int main()
 {
@@ -33,8 +33,12 @@ int main()
     // 提取存储在给定目录中的单个图像的路径
     std::vector<cv::String> images;
     // 包含棋盘图像的文件夹的路径
-    //std::string path = "D:/aaaLab/aaagraduate/SaveVideo/src/Calibration/Depth/*.png";
-    std::string path = "D:/aaaLab/aaagraduate/SaveVideo/src/Calibration/RGB/*.png";
+    //std::string path = "D:/aaaLab/aaagraduate/SaveVideo/source/Calibration/Depth/*.png";
+    std::string path = "D:/aaaLab/aaagraduate/SaveVideo/source/Calibration/RGB/*.png";
+
+    // 存储成图片形式的地址
+    //std::string  drawn_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/Calibration/Depth_drawn";
+    std::string  drawn_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/Calibration/RGB_drawn";
 
     cv::glob(path, images);
 
@@ -77,6 +81,8 @@ int main()
         }
 
         cv::imshow("Image", frame);
+        std::string drawn_name = drawn_folder_path + "/" + std::to_string(i) + ".png";
+        cv::imwrite(drawn_name, frame);
         cv::waitKey(1000);
     }
 

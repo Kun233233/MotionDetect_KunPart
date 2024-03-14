@@ -12,7 +12,7 @@
 class CameraModel
 {
 public:
-	CameraModel(int max_depth);
+	CameraModel();
 	~CameraModel();
 
 	void printMatrixInfo(const cv::Mat& matrix, const std::string& name);
@@ -20,11 +20,11 @@ public:
 	cv::Mat Get3DPoints(const cv::Mat& depth, const cv::Mat& pixels_to_points_map);
 	cv::Mat GetPixels(const cv::Mat& points, const cv::Mat& camera_matrix, const cv::Mat& depth_map);
 
-protected:
+//protected:
 	//RGB w x h
 	const int IMAGE_WIDTH_640 = 640;
 	const int  IMAGE_HEIGHT_480 = 480;
-	int max_depth; // 相机获取的最大深度
+	//int max_depth; // 相机获取的最大深度
 
 	float square_size; // 相机标定时，标定板中每个棋盘格的边长，单位：mm
 
