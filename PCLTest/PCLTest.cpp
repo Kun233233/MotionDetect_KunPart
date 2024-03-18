@@ -364,39 +364,6 @@ int main()
 
 		CameraModel camera_model;
 
-		//// RGB相机内外参
-		//cv::Mat RGBCameraMatrix = (cv::Mat_<float>(3, 3) << 597.4286735057399, 0, 356.4896812646391,
-		//	0, 590.3135817242555, 265.6565473501195,
-		//	0, 0, 1);
-		//cv::Mat RGBCameraMatrix_inv = RGBCameraMatrix.inv();
-		//cv::Mat RGBDistCoeffs = (cv::Mat_<float>(1, 5) << 0.02433779150902952, 0.1806910557398652, 0.01504073394057258, 0.01982505451991676, -0.4655100996385541);
-		//cv::Mat RGBRotVec = (cv::Mat_<float>(1, 3) << 0.1264627521012061, 0.5634184176200842, 1.660489725237417);
-		//cv::Mat RGBTransVec = (cv::Mat_<float>(1, 3) << 3.294513374873486, -4.191418478429084, 20.54231028621967);
-		//cv::Mat RGBRotationMat;
-		//cv::Rodrigues(RGBRotVec, RGBRotationMat);
-
-		//// 深度相机内外参
-		//cv::Mat DepthCameraMatrix = (cv::Mat_<float>(3, 3) << 569.1382523087108, 0, 330.4704844461951,
-		//	0, 564.5139460154893, 250.400178575307,
-		//	0, 0, 1);
-		//cv::Mat DepthCameraMatrix_inv = DepthCameraMatrix.inv();
-		//cv::Mat DepthDistCoeffs = (cv::Mat_<float>(1, 5) << -0.1802622269847234, 0.9963006566582099, -0.001074564774769674, 0.002966307587880594, -2.140745337976587);
-		//cv::Mat DepthRotVec = (cv::Mat_<float>(1, 3) << 0.1313875859188382, 0.62437610031627, 1.648945446919959);
-		//cv::Mat DepthTransVec = (cv::Mat_<float>(1, 3) << 6.166359975994443, -3.53947047998281, 20.74186807903174);
-		//cv::Mat DepthRotationMat;
-		//cv::Rodrigues(DepthRotVec, DepthRotationMat);
-
-		//// 深度相机转到RGB相机的R和T  P_rgb = R * P_ir + T
-		//cv::Mat R = RGBRotationMat * DepthRotationMat.inv();
-		//std::cout << R << "\n";
-		//std::cout << RGBTransVec << "\n";
-		//std::cout << DepthTransVec << "\n";
-		//std::cout << "RGBTransVec size: " << RGBTransVec.size() << std::endl;
-		//std::cout << "RGBTransVec size: " << RGBTransVec.size() << std::endl;
-		//std::cout << "DepthTransVec size: " << DepthTransVec.size() << std::endl;
-		//std::cout << "R size: " << R.size() << std::endl;
-		//float squaresize = 12;
-		//cv::Mat T = (RGBTransVec.t() - R * DepthTransVec.t()) * squaresize;
 
 		// 计算像素到对应空间点坐标映射关系
 		cv::Mat homogeneous_coords_all(3, IMAGE_HEIGHT_480 * IMAGE_WIDTH_640, CV_32F);
@@ -414,51 +381,12 @@ int main()
 		cv::Mat pixels_to_points = camera_model.DepthCameraMatrix_inv * homogeneous_coords_all;
 		// 记录循环次数
 		int count = 0;
-		//std::cout << "23332333233" << '\n';
 
-		//while (true)
-		//{
-		//// 读取数据流
-		//rc = streamDepth.readFrame(&frameDepth);
-		//cv::Mat mScaledDepth, hScaledDepth, mImageDepth, hImageDepth;
-		//if (rc == openni::STATUS_OK)
-		//{
-		//	// 将深度数据转换成OpenCV格式
-		//	cv::Mat depthtemp(frameDepth.getHeight(), frameDepth.getWidth(), CV_16UC1, (void*)frameDepth.getData()); //CV_16UC1
-		//	mImageDepth = depthtemp;
-		//	// 为了让深度图像显示的更加明显一些，将CV_16UC1 ==> CV_8U格式
-		//	//Mat mScaledDepth, hScaledDepth;
-
-		//	mImageDepth.convertTo(mScaledDepth, CV_8U, 255.0 / iMaxDepth);
-
-		//	//水平镜像深度图
-		//	hMirrorTrans(mScaledDepth, hScaledDepth);
-		//	// 显示出深度图像
-		//	imshow("Depth Image", hScaledDepth);
-
-		//	// 显示CV_16UC1格式的深度图
-		//	hMirrorTrans(mImageDepth, hImageDepth);
-		//	//imshow("Origin Depth Image", hImageDepth);
-		//}
+		//std::string rgb_file_name = "D:/aaaLab/aaagraduate/SaveVideo/source/1/RGBImgs/rgb_23.png";
+		//std::string depth_file_name = "D:/aaaLab/aaagraduate/SaveVideo/source/1/DepthImgs/depth_23.png";
 
 
-
-		//// 读取帧
-		//cv::Mat frame;
-		//imgCap >> frame;
-
-		//// 检查帧是否成功读取
-		//if (frame.empty()) {
-		//	std::cerr << "Error: Failed to capture frame." << std::endl;
-		//	break;
-		//}
-
-
-
-		//cv::namedWindow("Combined Images", cv::WINDOW_NORMAL);
-		//cv::resizeWindow("Combined Images", 640 * 2, 480);  // 设置窗口大小
-		//std::cout << rgbPathList[i] << "\n";
-		std::string rgb_file_name = rgb_folder_path + "/rgb_000122.png";  // 83 576
+		std::string rgb_file_name = rgb_folder_path + "/rgb_000122.png";  // 83 576 
 		std::string depth_file_name = depth_folder_path + "/depth_000122.png";
 		std::cout << rgb_file_name << "\n";
 		cv::Mat rgb = cv::imread(rgb_file_name);
@@ -488,14 +416,37 @@ int main()
 		//cv::Mat depth_inrgb = GetPixels(points_inrgb, RGBCameraMatrix, hImageDepth);
 		cv::Mat depth_inrgb = camera_model.GetPixels(points_inrgb, camera_model.RGBCameraMatrix, depth);
 
+		// 转换至rgb坐标系下，方便构建点云
+		cv::Mat points_rgbcoord = camera_model.PixelsCoordTransfer(points_inrgb);
+		camera_model.printMatrixInfo(points_rgbcoord, "points_rgbcoord");
+
 		// 中值滤波处理，先测试一下 (Kun: 2024.3.7)
 		cv::medianBlur(depth_inrgb, depth_inrgb, 5);
 
 		double max_depth_value;
 		// 使用 cv::minMaxLoc 函数获取最大值和位置
 		cv::minMaxLoc(depth_inrgb, nullptr, &max_depth_value, nullptr, nullptr);
+		std::cout << max_depth_value << '\n';
 
-		float scale_factor = 255.0 / static_cast<float>(max_depth_value);
+		// 设定阈值
+		float threshold_value = 5000;
+		//// 遍历图像，将大于阈值的元素设为0，保持其他元素不变
+		//for (int i = 0; i < depth_inrgb.rows; ++i) {
+		//	for (int j = 0; j < depth_inrgb.cols; ++j) {
+		//		if (depth_inrgb.at<float>(i, j) > threshold_value) {
+		//			depth_inrgb.at<float>(i, j) = 0.0f;
+		//		}
+		//	}
+		//}
+		// 使用 cv::threshold 函数将大于阈值的像素设为0
+		cv::Mat thresholded_depth;
+		cv::threshold(depth_inrgb, thresholded_depth, threshold_value, 0, cv::THRESH_TOZERO);
+
+
+
+		//float scale_factor = 255.0 / static_cast<float>(max_depth_value);
+		float scale_factor = 255.0 / static_cast<float>(threshold_value);
+
 		float offset = 0.0;
 		cv::Mat depth_inrgb_CV8U;
 		cv::convertScaleAbs(depth_inrgb, depth_inrgb_CV8U, scale_factor, offset);
@@ -505,11 +456,13 @@ int main()
 		// 将深度图归一化到0-255范围，以便与 RGB 图像叠加
 		cv::Mat depth_inrgb_normalized;
 		cv::normalize(depth_inrgb_CV8U, depth_inrgb_normalized, 0, 255, cv::NORM_MINMAX);
+		
 
 
 		// 将深度图转换为三通道，以便与 RGB 图像叠加
 		cv::Mat depth_inrgb_color;
 		cv::applyColorMap(depth_inrgb_normalized, depth_inrgb_color, cv::COLORMAP_JET);
+		cv::imshow("depth_inrgb_color", depth_inrgb_color);
 
 		// 叠加深度图+rgb图像
 		cv::Mat rgb_depth;
@@ -556,12 +509,15 @@ int main()
 				point.b = color[0];
 
 				// 假设空间位置是(x, y, 0)，你需要根据你的数据结构进行更改
-				//point.x = static_cast<float>(points_inrgb.at<uint16_t>(0, column));
-				//point.y = static_cast<float>(points_inrgb.at<uint16_t>(1, column));
-				//point.z = static_cast<float>(points_inrgb.at<uint16_t>(2, column));
-				point.x = points_inrgb.at<float>(0, column);
-				point.y = points_inrgb.at<float>(1, column);
-				point.z = points_inrgb.at<float>(2, column);
+				//point.x = points_inrgb.at<float>(0, column);
+				//point.y = points_inrgb.at<float>(1, column);
+				//point.z = points_inrgb.at<float>(2, column);
+
+				point.x = points_rgbcoord.at<cv::Vec3f>(y, x)[0];
+				point.y = points_rgbcoord.at<cv::Vec3f>(y, x)[1];
+				point.z = points_rgbcoord.at<cv::Vec3f>(y, x)[2];
+
+				//point.z = depth_inrgb.at<float>(y, x);
 
 				//// 假设空间位置是(x, y, 0)，你需要根据你的数据结构进行更改
 				//point.x = x;
@@ -569,8 +525,11 @@ int main()
 				//point.z = 0;
 
 				//std::cout << point.x << "  " << point.y << "  " << point.z << "\n";
-
-				cloud->push_back(point);
+				if (point.z < threshold_value)
+				{
+					cloud->push_back(point);
+				}
+				
 			}
 		}
 

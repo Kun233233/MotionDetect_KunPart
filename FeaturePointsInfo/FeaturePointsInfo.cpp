@@ -233,6 +233,12 @@ int main()
 			//	std::cerr << "Failed to load image." << std::endl;
 			//}
 			//printMatrixInfo(depth, "depth");
+			
+			// 尝试一下畸变矫正
+			//cv::Mat rgb_undistorted;
+			//cv::undistort(rgb, rgb_undistorted, camera_model.RGBCameraMatrix, camera_model.RGBDistCoeffs);
+			//cv::imshow("rgb_undistorted", rgb_undistorted);
+
 
 
 			// 获得深度图每个像素点对应的3D空间坐标 (x, y, z)

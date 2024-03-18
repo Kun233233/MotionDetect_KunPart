@@ -33,12 +33,12 @@ int main()
     // 提取存储在给定目录中的单个图像的路径
     std::vector<cv::String> images;
     // 包含棋盘图像的文件夹的路径
-    //std::string path = "D:/aaaLab/aaagraduate/SaveVideo/source/Calibration/Depth/*.png";
-    std::string path = "D:/aaaLab/aaagraduate/SaveVideo/source/Calibration/RGB/*.png";
+    std::string path = "D:/aaaLab/aaagraduate/SaveVideo/source/Calibration/Depth/*.png";
+    //std::string path = "D:/aaaLab/aaagraduate/SaveVideo/source/Calibration/RGB/*.png";
 
     // 存储成图片形式的地址
-    //std::string  drawn_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/Calibration/Depth_drawn";
-    std::string  drawn_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/Calibration/RGB_drawn";
+    std::string  drawn_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/Calibration/Depth_drawn";
+    //std::string  drawn_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/Calibration/RGB_drawn";
 
     cv::glob(path, images);
 

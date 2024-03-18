@@ -20,6 +20,8 @@ public:
 	cv::Mat Get3DPoints(const cv::Mat& depth, const cv::Mat& pixels_to_points_map);
 	cv::Mat GetPixels(const cv::Mat& points, const cv::Mat& camera_matrix, const cv::Mat& depth_map);
 
+	cv::Mat PixelsCoordTransfer(const cv::Mat& points);
+
 //protected:
 	//RGB w x h
 	const int IMAGE_WIDTH_640 = 640;
@@ -50,6 +52,10 @@ public:
 	// 后续可以改为利用多组图像+最小二乘法减小误差
 	cv::Mat R_depth2rgb;
 	cv::Mat T_depth2rgb;
+
+	// 将原始points对应像素位置（也就是深度图中points对应像素位置），转换至rgb图像下像素坐标，目的是方便点云生成
+	cv::Mat map_x;
+	cv::Mat map_y;
 
 
 

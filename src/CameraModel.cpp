@@ -19,13 +19,14 @@ CameraModel::CameraModel()
 	//this->RGBTransVec = (cv::Mat_<float>(1, 3) << 3.294513374873486, -4.191418478429084, 20.54231028621967);
 
 	// 新标定板版本 RGB
-	this->RGBCameraMatrix = (cv::Mat_<float>(3, 3) << 604.2085370195251, 0, 322.6278592922915,
-		0, 603.6937227693994, 235.528460406989,
+	this->RGBCameraMatrix = (cv::Mat_<float>(3, 3) << 607.8374395250249, 0, 324.8353393347486,
+		0, 607.2444348128537, 237.149453913389,
 		0, 0, 1);
 	this->RGBCameraMatrix_inv = RGBCameraMatrix.inv();
-	this->RGBDistCoeffs = (cv::Mat_<float>(1, 5) << -0.05016507932123436, 0.9997269173615618, -0.002050126664809821, -0.001327504815864807, -2.590438793150333);
-	this->RGBRotVec = (cv::Mat_<float>(1, 3) << -0.035437177821607, 0.003173871812315727, -1.518335793783583);
-	this->RGBTransVec = (cv::Mat_<float>(1, 3) << -33.72928752337317, 57.33939261054579, 321.5652351953804);
+	this->RGBDistCoeffs = (cv::Mat_<float>(1, 5) << -0.03196269902935066, 0.9470628443387368, -0.001401899373235646, -0.0003753770047383805, -2.547322490761638);
+	this->RGBRotVec = (cv::Mat_<float>(1, 3) << -0.02968701824799445, 0.002282037274796454, -1.518336358197425);
+	this->RGBTransVec = (cv::Mat_<float>(1, 3) << -34.90894696703963, 56.47315618102284, 323.6092183950838);
+	//this->RGBTransVec = (cv::Mat_<float>(1, 3) << -50.90894696703963, 56.47315618102284, 323.6092183950838);
 
 	cv::Rodrigues(this->RGBRotVec, this->RGBRotationMat);
 
@@ -39,19 +40,20 @@ CameraModel::CameraModel()
 	//this->DepthTransVec = (cv::Mat_<float>(1, 3) << 6.166359975994443, -3.53947047998281, 20.74186807903174);
 	
 	// 新标定板版本 Depth
-	this->DepthCameraMatrix = (cv::Mat_<float>(3, 3) << 574.7477649150313, 0, 326.6927782733942,
-		0, 573.8775739319774, 240.8218767510635,
+	this->DepthCameraMatrix = (cv::Mat_<float>(3, 3) << 576.6390327180507, 0, 324.9849290814257,
+		0, 575.6560633555423, 241.80528982161,
 		0, 0, 1);
 	this->DepthCameraMatrix_inv = DepthCameraMatrix.inv();
-	this->DepthDistCoeffs = (cv::Mat_<float>(1, 5) << -0.1249797724089348, 0.6554742403337946, -0.001983882261750233, -0.0009005479294426705, -1.318633314574677);
-	this->DepthRotVec = (cv::Mat_<float>(1, 3) << -0.0337157754012347, -0.01083893881602162, -1.521085578010777);
-	this->DepthTransVec = (cv::Mat_<float>(1, 3) << -12.18319909637389, 56.86704911511715, 322.6538039972514);
+	this->DepthDistCoeffs = (cv::Mat_<float>(1, 5) << -0.1313667715820261, 0.7253701684598015, -0.001511899382358423, -0.001635651373407517, -1.520364579947955);
+	this->DepthRotVec = (cv::Mat_<float>(1, 3) << -0.03456143021858554, -0.007579969887891717, -1.521223589678921);
+	this->DepthTransVec = (cv::Mat_<float>(1, 3) << -11.21386065738118, 56.3175734828904, 323.767980354571);
 	
 	
 	cv::Rodrigues(this->DepthRotVec, this->DepthRotationMat);
 
 	this->R_depth2rgb = RGBRotationMat * DepthRotationMat.inv();
 	this->T_depth2rgb = (RGBTransVec.t() - R_depth2rgb * DepthTransVec.t()) * square_size;
+
 }
 
 CameraModel::~CameraModel()
@@ -172,8 +174,10 @@ cv::Mat CameraModel::GetPixels(const cv::Mat& points, const cv::Mat& camera_matr
 	// depth_in_rgb: 存储转换至rgb图像下的深度图
 	cv::Mat depth_in_rgb = cv::Mat::zeros(IMAGE_HEIGHT_480, IMAGE_WIDTH_640, CV_16U);
 
-	cv::Mat map_x = cv::Mat::zeros(depth_map.size(), CV_32FC1);
-	cv::Mat map_y = cv::Mat::zeros(depth_map.size(), CV_32FC1);
+	//cv::Mat map_x = cv::Mat::zeros(depth_map.size(), CV_32FC1);
+	//cv::Mat map_y = cv::Mat::zeros(depth_map.size(), CV_32FC1);
+	this->map_x = cv::Mat::zeros(depth_map.size(), CV_32FC1);
+	this->map_y = cv::Mat::zeros(depth_map.size(), CV_32FC1);
 
 
 	// 使用 OpenMP 并行化外层循环
@@ -207,4 +211,27 @@ cv::Mat CameraModel::GetPixels(const cv::Mat& points, const cv::Mat& camera_matr
 	// (4）INTER_LANCZOS4——lanczos插值（逾8×8像素邻域的Lanczos插值）
 
 	return depth_in_rgb;
+}
+
+cv::Mat CameraModel::PixelsCoordTransfer(const cv::Mat& points)
+{
+	cv::Mat points_x_rgb;
+	cv::Mat points_x = points.row(0).reshape(1, 480);
+	cv::remap(points_x, points_x_rgb, map_x, map_y, cv::INTER_LANCZOS4, cv::BORDER_REPLICATE, cv::Scalar());
+
+	cv::Mat points_y_rgb;
+	cv::Mat points_y = points.row(1).reshape(1, 480);
+	cv::remap(points_y, points_y_rgb, map_x, map_y, cv::INTER_LANCZOS4, cv::BORDER_REPLICATE, cv::Scalar());
+
+	cv::Mat points_z_rgb;
+	cv::Mat points_z = points.row(2).reshape(1, 480);
+	cv::remap(points_z, points_z_rgb, map_x, map_y, cv::INTER_LANCZOS4, cv::BORDER_REPLICATE, cv::Scalar());
+
+	// 创建一个空的三通道矩阵
+	cv::Mat merged;
+	// 合并三个单通道矩阵为一个三通道矩阵
+	cv::merge(std::vector<cv::Mat>{points_x_rgb, points_y_rgb, points_z_rgb}, merged);
+
+
+	return merged;
 }
