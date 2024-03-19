@@ -28,6 +28,9 @@ public:
 
 	// 函数将二维字符串数组存储为txt文件，使用指定分隔符
 	void saveToTxt(const std::vector<std::vector<std::string>>& data, const std::string& filename, char delimiter);
+	//void saveToTxt(const std::vector<std::vector<float>>& data, const std::string& filename, char delimiter);
+	//template<typename T>
+	//void saveToTxt(const std::vector<std::vector<T>>& data, const std::string& filename, char delimiter);
 
 	// 通过面部指定四点位置，得到头部刚体位姿
 	cv::Mat PositionToMotion(const cv::Mat& p1, const cv::Mat& p2, const cv::Mat& p3, const cv::Mat& p4);

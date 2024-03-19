@@ -121,7 +121,7 @@ auto GetFeaturePointsPixels(const std::string& feature_rgb_path, std::vector<std
 
 			// 如果当前列是目标列，则添加到 vector 中
 			if (currentColumn == feature_id_series[nextFeature] + 1) {
-				std::cout << currentRow - 1 << " " << currentColumn << " " << value << "\n";
+				//std::cout << currentRow - 1 << " " << currentColumn << " " << value << "\n";
 				feature_pixels_position[nextFeature][currentRow - 1] = value;
 				nextFeature++;
 			}
@@ -144,6 +144,7 @@ auto GetFeaturePointsPixels(const std::string& feature_rgb_path, std::vector<std
 int main()
 {
 	try {
+		double minVal, maxVal;
 		std::string  depth_video_path = "D:/aaaLab/aaagraduate/SaveVideo/DepthSavePoll/depth_0.avi";
 		std::string  rgb_video_path = "D:/aaaLab/aaagraduate/SaveVideo/DepthSavePoll/rgb_0.avi";
 		// 存储成图片形式的地址
@@ -174,19 +175,27 @@ int main()
 		Utility utility;
 
 		// 创建一个 vector 用于存储每个元素
-		std::vector<std::vector<std::string>> feature_pixels_position(feature_num);
+		std::vector<std::vector<std::string>> feature_pixels_position;
 		// 提前分配空间
-		feature_pixels_position.resize(static_cast<int>(feature_num * 1.5));
+		feature_pixels_position.resize(static_cast<int>(feature_num));
 		for (auto& row : feature_pixels_position) {
-			row.resize(static_cast<int>(countmax * 1.5));
+			row.resize(static_cast<int>(countmax));
 		}
 
 		// 创建一个 vector 用于存储选中特征点的每一帧空间点坐标
-		std::vector<std::vector<std::string>> feature_pixels_3D(feature_num);
+		std::vector<std::vector<std::string>> feature_pixels_3D;
 		// 提前分配空间
-		feature_pixels_3D.resize(static_cast<int>(feature_num * 1.5));
+		feature_pixels_3D.resize(static_cast<int>(countmax));
 		for (auto& row : feature_pixels_3D) {
-			row.resize(static_cast<int>(countmax * 1.5));
+			row.resize(static_cast<int>(feature_num));
+		}
+
+		// motion_vec 存储每一帧的运动情况
+		std::vector<std::vector<std::string>> motion_vec;
+		// 提前分配空间
+		motion_vec.resize(static_cast<int>(countmax));
+		for (auto& row : motion_vec) {
+			row.resize(static_cast<int>(6));
 		}
 
 		GetFeaturePointsPixels(feature_rgb_path, feature_pixels_position, '\t');
@@ -205,6 +214,31 @@ int main()
 			}
 		}
 		cv::Mat pixels_to_points = camera_model.DepthCameraMatrix_inv * homogeneous_coords_all;
+
+		//// 初始化变量来保存最大和最小值以及它们的位置
+		//double minValue, maxValue;
+		//cv::Point minLoc, maxLoc;
+		//// 使用cv::minMaxLoc函数获取最大和最小值及其位置
+		//cv::minMaxLoc(homogeneous_coords_all, &minValue, &maxValue, &minLoc, &maxLoc);
+		//// 输出结果
+		//std::cout << "Min value: " << minValue << ", Max value: " << maxValue << std::endl;
+		//std::cout << "Min location: " << minLoc << ", Max location: " << maxLoc << std::endl;
+
+		//cv::Mat points_x = pixels_to_points.row(0).reshape(1, 480);
+		//cv::Mat points_y = pixels_to_points.row(1).reshape(1, 480);
+		//cv::Mat n0;
+		//cv::Mat n1;
+		//cv::normalize(points_x, n0, 0, 1, cv::NORM_MINMAX);
+		//cv::normalize(points_y, n1, 0, 1, cv::NORM_MINMAX);
+		//cv::imshow("n0", n0);
+		//cv::imshow("n1", n1);
+
+		// 记录原始depth中为0的点在rgb坐标系下对应的坐标，便于剔除异常数据
+		cv::Mat nodepth_point = (cv::Mat_<float>(3, 1) << 0.0f, 0.0f, 0.0f);
+		cv::Mat points_inrgb = camera_model.R_depth2rgb * nodepth_point + camera_model.T_depth2rgb;
+		std::cout << points_inrgb << '\n';
+
+
 
 		// 记录循环次数
 		int count = 0;
@@ -239,30 +273,114 @@ int main()
 			//cv::undistort(rgb, rgb_undistorted, camera_model.RGBCameraMatrix, camera_model.RGBDistCoeffs);
 			//cv::imshow("rgb_undistorted", rgb_undistorted);
 
-
-
 			// 获得深度图每个像素点对应的3D空间坐标 (x, y, z)
 			cv::Mat points = camera_model.Get3DPoints(depth, pixels_to_points);
+			//cv::Mat points_x = points.row(0).reshape(1, 480);
+			//cv::Mat points_y = points.row(1).reshape(1, 480);
+			cv::Mat points_z = points.row(2).reshape(1, 480);
+			//cv::Mat n;
+			//cv::normalize(points_x, n, 0, 1, cv::NORM_MINMAX);
+			//cv::imshow("n", n);
+			//cv::minMaxLoc(points_z, &minVal, &maxVal);
+			//std::cout << minVal << " " << maxVal << '\n';
+
 
 
 			cv::Mat T_extended = cv::repeat(camera_model.T_depth2rgb, 1, IMAGE_HEIGHT_480 * IMAGE_WIDTH_640); // [3, 1] -> [3, 480*640]
 			cv::Mat points_inrgb = camera_model.R_depth2rgb * points + T_extended; // points应该化成(3, 1)的样子，不急，回来改
 
+			//cv::minMaxLoc(points_inrgb.row(2).reshape(1, 480), &minVal, &maxVal);
+			//std::cout << minVal << " " << maxVal << '\n';
+
+			//cv::Mat points_inrgb_x = points_inrgb.row(0).reshape(1, 480);
+			//cv::Mat points_inrgb_y = points_inrgb.row(1).reshape(1, 480);
+			//cv::Mat points_inrgb_z = points_inrgb.row(2).reshape(1, 480);
+			//cv::Mat n_inrgb;
+			//cv::normalize(points_x, n_inrgb, 0, 1, cv::NORM_MINMAX);
+			//cv::imshow("n_inrgb", n_inrgb);
+			//cv::waitKey(0);
+
+			//for (int j = 0; j < 640 * 480; j++)
+			//{
+			//	if (std::abs(points_inrgb.at<float>(0, j) - (-24.6678)) < 1e-3)
+			//	{
+			//		//std::cout << x << " " << y << '\n';
+			//		std::cout << "----------" << '\n';
+			//		std::cout << points.at<float>(0, j) << " " << points.at<float>(1, j) << " " << points.at<float>(2, j) << " " << '\n';
+			//		std::cout << "----------" << '\n';
+			//		cv::waitKey(0);
+			//	}
+			//}
+			
+
 			//cv::Mat depth_inrgb = GetPixels(points_inrgb, RGBCameraMatrix, hImageDepth);
 			cv::Mat depth_inrgb = camera_model.GetPixels(points_inrgb, camera_model.RGBCameraMatrix, depth);
+			
+			// 转换至rgb坐标系下，方便构建点云
+			cv::Mat points_rgbcoord = camera_model.PixelsCoordTransfer(points_inrgb);
+
+			cv::medianBlur(points_rgbcoord, points_rgbcoord, 5); // =============
+
+			//// 分离通道
+			//std::vector<cv::Mat> channels;
+			//cv::split(points_rgbcoord, channels);
+
+			//// 获取要可视化的通道索引（0: Blue, 1: Green, 2: Red）
+			//int channelIndex = 0; // 这里选择蓝色通道
+
+			////// 将大于阈值的元素设为0
+			////cv::threshold(channels[channelIndex], channels[channelIndex], 1000, 0, cv::THRESH_TOZERO);
+			////// 将小于阈值的元素设为0
+			////cv::threshold(channels[channelIndex], channels[channelIndex], -1000, 0, cv::THRESH_TOZERO_INV);
+
+			//// 初始化变量来保存最大和最小值以及它们的位置
+			//double minValue, maxValue;
+			//cv::Point minLoc, maxLoc;
+			//
+
+			//// 使用cv::minMaxLoc函数获取最大和最小值及其位置
+			//cv::minMaxLoc(channels[channelIndex], &minValue, &maxValue, &minLoc, &maxLoc);
+
+			//// 输出结果
+			//std::cout << "Min value: " << minValue << ", Max value: " << maxValue << std::endl;
+			//std::cout << "Min location: " << minLoc << ", Max location: " << maxLoc << std::endl;
+
+			//// 归一化选定通道到 0-255 范围
+			//cv::Mat normalizedChannel;
+			//cv::normalize(channels[channelIndex], normalizedChannel, 0, 1, cv::NORM_MINMAX);
+
+			//// 可视化选定通道
+			//cv::imshow("Channel", normalizedChannel);
+			//cv::waitKey(0);
+
+			//std::cout << "34343434" << '\n';
 
 			// 中值滤波处理，先测试一下 (Kun: 2024.3.7)
-			cv::medianBlur(depth_inrgb, depth_inrgb, 5);
+			cv::medianBlur(depth_inrgb, depth_inrgb, 5); // =============
+			cv::medianBlur(points_rgbcoord, points_rgbcoord, 5); // =============
 
-			double max_depth_value;
-			// 使用 cv::minMaxLoc 函数获取最大值和位置
-			cv::minMaxLoc(depth_inrgb, nullptr, &max_depth_value, nullptr, nullptr);
 
-			float scale_factor = 255.0 / static_cast<float>(max_depth_value);
-			float offset = 0.0;
+			// 寻找最小值和最大值
+			cv::minMaxLoc(depth_inrgb, &minVal, &maxVal);
+			//std::cout << minVal << " " << maxVal << '\n';
+
+			//camera_model.printMatrixInfo(depth_inrgb, "depth_inrgb");
+
+			// 线性变换将floatMat的值缩放到0-255的范围内
+			cv::Mat scaledMat;
+			float scale =  255.0 / static_cast<float>((maxVal - minVal));
+			float shift = static_cast<float>(-minVal) * scale;
+			
 			cv::Mat depth_inrgb_CV8U;
-			cv::convertScaleAbs(depth_inrgb, depth_inrgb_CV8U, scale_factor, offset);
+			//cv::convertScaleAbs(depth_inrgb, depth_inrgb_CV8U, scale_factor, offset);
+			depth_inrgb.convertTo(depth_inrgb_CV8U, CV_8U, scale, shift);
+			//cv::minMaxLoc(depth_inrgb, &minVal, &maxVal);
+			//std::cout << minVal << " " << maxVal << '\n';
+
+			//cv::normalize(depth_inrgb, depth_inrgb_CV8U, 0, 1, cv::NORM_MINMAX);
 			cv::imshow("depth_inrgb_CV8U", depth_inrgb_CV8U);
+			//cv::waitKey(0);
+
 
 
 			// 将深度图归一化到0-255范围，以便与 RGB 图像叠加
@@ -271,7 +389,7 @@ int main()
 
 
 			// 将深度图转换为三通道，以便与 RGB 图像叠加
-			cv::Mat depth_inrgb_color;
+			cv::Mat depth_inrgb_color; 
 			cv::applyColorMap(depth_inrgb_normalized, depth_inrgb_color, cv::COLORMAP_JET);
 
 			// 叠加深度图+rgb图像
@@ -294,40 +412,71 @@ int main()
 			std::vector<cv::Mat> position;
 			position.resize(feature_num * 1.5);
 
+			bool is_empty = false;
+
 			for (int feature_id = 0; feature_id < feature_num; feature_id++)
 			{
 				std::string value = feature_pixels_position[feature_id][i];
 				
-				std::cout << value << '\n';
+				//std::cout << value << '\n';
 				std::smatch matches;
 				int x, y;
 				if (std::regex_search(value, matches, pattern)) {
 					// 第一个匹配项是整个字符串，后面的是括号内的两个数字
 					x = std::stoi(matches[1].str());
 					y = std::stoi(matches[2].str());
-					std::cout << "First Number: " << x << std::endl;
-					std::cout << "Second Number: " << y << std::endl;
+					//std::cout << "First Number: " << x << std::endl;
+					//std::cout << "Second Number: " << y << std::endl;
 				}
 				else {
 					std::cerr << "No match found" << std::endl;
 				}
-				//int index = y * IMAGE_WIDTH_640 + x;
-				//int index = x * IMAGE_WIDTH_640 + y;
-				//int index = x * IMAGE_HEIGHT_480 + y;
+
 				int index = y * IMAGE_WIDTH_640 + x;
 				// 检查索引是否在图像范围内
-				if (index >= 0 && index < points_inrgb.cols) {
+				//if (index >= 0 && index < points_rgbcoord.cols) {
+				if (true){
 					// 访问 reshape 后的图像中特定位置的像素值
-					float point_x = points_inrgb.at<float>(0, index);
-					float point_y = points_inrgb.at<float>(1, index);
-					float point_z = points_inrgb.at<float>(2, index);
+					float point_x = points_rgbcoord.at<cv::Vec3f>(y, x)[0];
+					float point_y = points_rgbcoord.at<cv::Vec3f>(y, x)[1];
+					float point_z = points_rgbcoord.at<cv::Vec3f>(y, x)[2];
+
+					std::vector<cv::Mat> channels;
+					cv::split(points_rgbcoord, channels);
+					cv::Point feature1(x, y);
+					cv::normalize(channels[0], channels[0], 0, 1, cv::NORM_MINMAX);
+					cv::circle(channels[0], feature1, 3, cv::Scalar(255), -1);
+					cv::imshow("channels[0]", channels[0]);
+
+
+
+					//if (std::abs(point_x - (-24.6678)) < 1e-3)
+					//{
+					//	std::cout << x << " " << y << '\n';
+					//	std::cout << depth_inrgb.at<float>(y, x) << '\n';
+					//	//cv::waitKey(0);
+					//}
+					
+					//std::cout << y << " " << x << " " << depth_inrgb.at<uint16_t>(x, y) << '\n';
+					//std::cout << points_inrgb.at<float>(2, 0) << '\n';
+					if (std::abs(point_z - points_inrgb.at<float>(2, 0)) < 1e-4)
+					{
+						std::cout << x << " " << y << '\n';
+						std::cout << depth_inrgb.at<float>(y, x) << '\n';
+						point_x = 0.0f;
+						point_y = 0.0f;
+						point_z = 0.0f;	
+						is_empty = true;
+					}
+
 					
 					std::stringstream ss; // 创建一个字符串流对象
 					ss << std::fixed << std::setprecision(4); // 设置小数点精度为4位
 					ss << "(" << point_x << "," << point_y << "," << point_z << ")"; // 将浮点数写入字符串流中
 					std::string result = ss.str(); // 从字符串流中获取组合后的字符串
-					feature_pixels_3D[feature_id][i] = result;
-					std::cout << result << std::endl; // 输出结果
+					feature_pixels_3D[i][feature_id] = result;
+					//std::cout << result << std::endl; // 输出结果
+					//std::cout << feature_pixels_3D.size() << "  " << feature_pixels_3D[feature_id].size() << std::endl;
 
 					cv::Mat point = (cv::Mat_<float>(3, 1) << point_x, point_y, point_z);
 					position[feature_id] = point;
@@ -343,7 +492,19 @@ int main()
 			cv::imshow("Camera Feed", rgb);
 
 			cv::Mat motion = utility.PositionToMotion((position[1] + position[2]) / 2, (position[3] + position[4]) / 2, position[5], position[0]);
-
+			
+			for (int motion_id = 0; motion_id < 6; motion_id++)
+			{
+				if (!is_empty)
+				{
+					motion_vec[i][motion_id] = std::to_string( motion.at<float>(motion_id, 0));
+				}
+				else
+				{
+					motion_vec[i][motion_id] = "";
+				}
+				
+			}
 
 			auto end_time = std::chrono::high_resolution_clock::now();
 			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
@@ -369,6 +530,11 @@ int main()
 		//file.close();
 		std::string feature_3D_path = "D:/aaaLab/aaagraduate/SaveVideo/source/points.txt";
 		utility.saveToTxt(feature_pixels_3D, feature_3D_path, '\t');
+		//utility.saveToTxt<std::string>(feature_pixels_3D, feature_3D_path, '\t');
+
+		std::string motion_vec_path = "D:/aaaLab/aaagraduate/SaveVideo/source/motion.txt";
+		utility.saveToTxt(motion_vec, motion_vec_path, '\t');
+		//utility.saveToTxt<float>(motion_vec, motion_vec_path, '\t');
 
 	}
 	catch (cv::Exception& e)

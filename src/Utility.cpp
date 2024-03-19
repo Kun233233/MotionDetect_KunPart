@@ -102,6 +102,7 @@ void Utility::saveToTxt(const std::vector<std::vector<std::string>>& data, const
 	for (const auto& row : data) {
 		for (size_t i = 0; i < row.size(); ++i) {
 			outfile << row[i];
+			//std::cout << i << '\n';
 
 			// 在每个元素后面添加分隔符，除了最后一个元素
 			if (i < row.size() - 1) {
@@ -116,9 +117,41 @@ void Utility::saveToTxt(const std::vector<std::vector<std::string>>& data, const
 	outfile.close();
 }
 
+
+//void Utility::saveToTxt(const std::vector<std::vector<float>>& data, const std::string& filename, char delimiter)
+//{
+//	// 打开文件流
+//	std::ofstream outfile(filename);
+//
+//	// 检查文件是否成功打开
+//	if (!outfile.is_open()) {
+//		std::cerr << "Error opening file: " << filename << std::endl;
+//		return;
+//	}
+//
+//	// 遍历二维数组并将数据写入文件
+//	for (const auto& row : data) {
+//		for (size_t i = 0; i < row.size(); ++i) {
+//			outfile << row[i];
+//
+//			// 在每个元素后面添加分隔符，除了最后一个元素
+//			if (i < row.size() - 1) {
+//				outfile << delimiter;
+//			}
+//		}
+//		// 换行表示新的一行
+//		outfile << std::endl;
+//	}
+//
+//	// 关闭文件流
+//	outfile.close();
+//}
+
+
+
 cv::Mat Utility::PositionToMotion(const cv::Mat& p1, const cv::Mat& p2, const cv::Mat& p3, const cv::Mat& p4)
 {
-	std::cout << p1 << p2 << p3 << p4 << '\n';
+	//std::cout << p1 << p2 << p3 << p4 << '\n';
 
 	cv::Mat p2_p3 = p2 - p3;
 	cv::Mat p1_p3 = p1 - p3;
@@ -129,8 +162,9 @@ cv::Mat Utility::PositionToMotion(const cv::Mat& p1, const cv::Mat& p2, const cv
 	cv::Mat n2 = p2_p3 - p1_p3;
 	cv::normalize(n2, n2);
 	cv::Mat n3 = n1.cross(n2);
-
-	float a = std::asinf(n2.at<float>(2, 0) / n3.at<float>(2, 0));
+	//std::cout << n1 << '\n' << n2 << '\n' << n3 << '\n' << '\n';
+	//std::cout << n2.at<float>(2, 0) << '\n' << n3.at<float>(2, 0) << '\n' << n2.at<float>(2, 0) / n3.at<float>(2, 0) << '\n' << std::asinf(n2.at<float>(2, 0) / n3.at<float>(2, 0)) << '\n' << '\n';
+	float a = std::atan2f(n2.at<float>(2, 0), n3.at<float>(2, 0));
 	float b = -std::asinf(n1.at<float>(2, 0));
 	float c = std::atan2f(n1.at<float>(1, 0), n1.at<float>(0, 0));
 

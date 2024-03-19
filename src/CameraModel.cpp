@@ -153,6 +153,12 @@ cv::Mat CameraModel::GetPixels(const cv::Mat& points, const cv::Mat& camera_matr
 	// 获取第三行的元素
 	cv::Mat z = pixels.row(2);
 
+	// 获取原来像素排列顺序的深度值，后续remap调整
+	cv::Mat depth_new = z.reshape(1, 480).clone();
+	//double minVal, maxVal;
+	//cv::minMaxLoc(depth_new, &minVal, &maxVal);
+	//std::cout << minVal << " " << maxVal << '\n';
+
 	// 创建一个矩阵，每个元素都是对应列的第三行元素的倒数
 	cv::Mat inverse_z;
 	cv::divide(1.0, z, inverse_z);
@@ -172,7 +178,12 @@ cv::Mat CameraModel::GetPixels(const cv::Mat& points, const cv::Mat& camera_matr
 	cv::compare(targetRow, onesRow, comparisonResult, cv::CMP_EQ);
 
 	// depth_in_rgb: 存储转换至rgb图像下的深度图
-	cv::Mat depth_in_rgb = cv::Mat::zeros(IMAGE_HEIGHT_480, IMAGE_WIDTH_640, CV_16U);
+	//cv::Mat depth_in_rgb = cv::Mat::zeros(IMAGE_HEIGHT_480, IMAGE_WIDTH_640, CV_16U);
+	//cv::Mat depth_in_rgb = cv::Mat::zeros(IMAGE_HEIGHT_480, IMAGE_WIDTH_640, CV_32FC1);
+	cv::Mat depth_in_rgb = cv::Mat::zeros(IMAGE_HEIGHT_480, IMAGE_WIDTH_640, CV_32FC1);
+	//cv::minMaxLoc(depth_in_rgb, &minVal, &maxVal);
+	//std::cout << minVal << " " << maxVal << '\n';
+
 
 	//cv::Mat map_x = cv::Mat::zeros(depth_map.size(), CV_32FC1);
 	//cv::Mat map_y = cv::Mat::zeros(depth_map.size(), CV_32FC1);
@@ -204,11 +215,14 @@ cv::Mat CameraModel::GetPixels(const cv::Mat& points, const cv::Mat& camera_matr
 		}
 	}
 
-	cv::remap(depth_map, depth_in_rgb, map_x, map_y, cv::INTER_LANCZOS4, cv::BORDER_REPLICATE, cv::Scalar());
+	//cv::remap(depth_map, depth_in_rgb, map_x, map_y, cv::INTER_LANCZOS4, cv::BORDER_REPLICATE, cv::Scalar());
+	cv::remap(depth_new, depth_in_rgb, map_x, map_y, cv::INTER_LANCZOS4, cv::BORDER_REPLICATE, cv::Scalar());
 	//（1）INTER_NEAREST——最近邻插值
 	//（2）INTER_LINEAR——双线性插值（默认）
 	//（3）INTER_CUBIC——双三样条插值（逾4×4像素邻域内的双三次插值）
 	// (4）INTER_LANCZOS4——lanczos插值（逾8×8像素邻域的Lanczos插值）
+	//cv::minMaxLoc(depth_in_rgb, &minVal, &maxVal);
+	//std::cout << minVal << " " << maxVal << '\n';
 
 	return depth_in_rgb;
 }
