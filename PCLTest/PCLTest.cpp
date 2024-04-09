@@ -104,8 +104,10 @@ int main()
 		//std::string depth_file_name = "D:/aaaLab/aaagraduate/SaveVideo/source/1/DepthImgs/depth_23.png";
 
 
-		std::string rgb_file_name = rgb_folder_path + "/rgb_000122.png";  // 83 576 
-		std::string depth_file_name = depth_folder_path + "/depth_000122.png";
+		//std::string rgb_file_name = rgb_folder_path + "/rgb_000035.png";  // 83 576 
+		//std::string depth_file_name = depth_folder_path + "/depth_000035.png";
+		std::string rgb_file_name = rgb_folder_path + "/rgb_000145.png";  // 83 576 
+		std::string depth_file_name = depth_folder_path + "/depth_000145.png";
 		std::cout << rgb_file_name << "\n";
 		cv::Mat rgb = cv::imread(rgb_file_name);
 		cv::Mat depth = cv::imread(depth_file_name, cv::IMREAD_UNCHANGED);
@@ -147,6 +149,7 @@ int main()
 		std::cout << max_depth_value << '\n';
 
 		// 设定阈值
+		//float threshold_value = 560;
 		float threshold_value = 5000;
 		//// 遍历图像，将大于阈值的元素设为0，保持其他元素不变
 		//for (int i = 0; i < depth_inrgb.rows; ++i) {
@@ -171,13 +174,16 @@ int main()
 		cv::Mat depth_inrgb_CV8U;
 		//cv::convertScaleAbs(depth_inrgb, depth_inrgb_CV8U, scale_factor, offset);
 		depth_inrgb.convertTo(depth_inrgb_CV8U, CV_8U, scale, shift);
+		//depth.convertTo(depth_inrgb_CV8U, CV_8U, scale, shift);
+
 		cv::imshow("depth_inrgb_CV8U", depth_inrgb_CV8U);
 
 
 		// 将深度图归一化到0-255范围，以便与 RGB 图像叠加
 		cv::Mat depth_inrgb_normalized;
 		cv::normalize(depth_inrgb_CV8U, depth_inrgb_normalized, 0, 255, cv::NORM_MINMAX);
-		
+		//cv::normalize(depth, depth_inrgb_normalized, 0, 255, cv::NORM_MINMAX);
+
 
 
 		// 将深度图转换为三通道，以便与 RGB 图像叠加
@@ -257,6 +263,7 @@ int main()
 		// 可视化点云
 		pcl::visualization::PCLVisualizer::Ptr viewer(new pcl::visualization::PCLVisualizer("PointCloud Viewer"));
 		viewer->setBackgroundColor(0, 0, 0);
+		//viewer->setBackgroundColor(1.0, 1.0, 1.0);
 		viewer->addPointCloud<pcl::PointXYZRGB>(cloud, "point_cloud");
 		viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "point_cloud");
 		//cv::waitKey(0);

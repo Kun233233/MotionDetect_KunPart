@@ -37,6 +37,14 @@
 *.png
 *.mp4
 
+# zip pack
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+
 build/
+ThirdParty/
 .vscode/
 

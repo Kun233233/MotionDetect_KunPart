@@ -24,14 +24,14 @@
 
 #include <omp.h>
 
-//#include <iostream>
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-#include <pcl/common/common_headers.h>
-#include <pcl/io/pcd_io.h>
-#include <pcl/visualization/pcl_visualizer.h>
-#include <pcl/visualization/cloud_viewer.h>
-#include <pcl/console/parse.h>
+#include <iostream>
+//#include <pcl/point_cloud.h>
+//#include <pcl/point_types.h>
+//#include <pcl/common/common_headers.h>
+//#include <pcl/io/pcd_io.h>
+//#include <pcl/visualization/pcl_visualizer.h>
+//#include <pcl/visualization/cloud_viewer.h>
+//#include <pcl/console/parse.h>
 
 # include "CameraModel.h"
 # include "Utility.h"
@@ -42,28 +42,28 @@ const int IMAGE_WIDTH_640 = 640;
 const int  IMAGE_HEIGHT_480 = 480;
 //Read data outtime
 const int  UVC_TIME_OUT = 3000; //ms
-const float PI = 3.1415926535;
+//const float PI = 3.1415926535;
 
-const int feature_num = 6;
+//const int feature_num = 6;
 
 
-enum class FeatureID
-{
-	LeftL	= 37,
-	LeftR	= 40,
-	RightL	= 43,
-	RightR	= 46, 
-	NoseTop	= 34, 
-	MouseTop= 52
-};
-
-const std::vector<int> feature_id_series = {	static_cast<int>(FeatureID::NoseTop),
-												static_cast<int>(FeatureID::LeftL), 
-												static_cast<int>(FeatureID::LeftR), 
-												static_cast<int>(FeatureID::RightL), 
-												static_cast<int>(FeatureID::RightR), 
-												static_cast<int>(FeatureID::MouseTop),
-												 };
+//enum class FeatureID
+//{
+//	LeftL	= 37,
+//	LeftR	= 40,
+//	RightL	= 43,
+//	RightR	= 46, 
+//	NoseTop	= 31, 
+//	MouseTop= 52
+//};
+//
+//const std::vector<int> feature_id_series = {	static_cast<int>(FeatureID::NoseTop),
+//												static_cast<int>(FeatureID::LeftL), 
+//												static_cast<int>(FeatureID::LeftR), 
+//												static_cast<int>(FeatureID::RightL), 
+//												static_cast<int>(FeatureID::RightR), 
+//												static_cast<int>(FeatureID::MouseTop),
+//												 };
 
 
 
@@ -75,64 +75,64 @@ void showdevice() {
 	openni::Array<openni::DeviceInfo> aDeviceList;
 	openni::OpenNI::enumerateDevices(&aDeviceList);
 
-	std::cout << "电脑上连接着 " << aDeviceList.getSize() << " 个体感设备." << endl;
+	std::cout << "电脑上连接着 " << aDeviceList.getSize() << " 个体感设备." << std::endl;
 
 	for (int i = 0; i < aDeviceList.getSize(); ++i)
 	{
-		cout << "设备 " << i << endl;
+		std::cout << "设备 " << i << std::endl;
 		const openni::DeviceInfo& rDevInfo = aDeviceList[i];
-		cout << "设备名： " << rDevInfo.getName() << endl;
-		cout << "设备Id： " << rDevInfo.getUsbProductId() << endl;
-		cout << "供应商名： " << rDevInfo.getVendor() << endl;
-		cout << "供应商Id: " << rDevInfo.getUsbVendorId() << endl;
-		cout << "设备URI: " << rDevInfo.getUri() << endl;
+		std::cout << "设备名： " << rDevInfo.getName() << std::endl;
+		std::cout << "设备Id： " << rDevInfo.getUsbProductId() << std::endl;
+		std::cout << "供应商名： " << rDevInfo.getVendor() << std::endl;
+		std::cout << "供应商Id: " << rDevInfo.getUsbVendorId() << std::endl;
+		std::cout << "设备URI: " << rDevInfo.getUri() << std::endl;
 
 	}
 }
 
-auto GetFeaturePointsPixels(const std::string& feature_rgb_path, std::vector<std::vector<std::string>>& feature_pixels_position, char delimiter)
-{
-	//// 打开文本文件
-	std::ifstream file(feature_rgb_path);
-
-	// 检查文件是否成功打开
-	if (!file.is_open()) {
-		std::cerr << "Error opening file" << std::endl;
-		//return 1;
-		exit(1);
-	}
-
-
-	std::string line;
-	// 逐行读取文件内容
-	for (int currentRow = 0; std::getline(file, line); ++currentRow) {
-		// 使用字符串流解析每一行的数据
-		std::istringstream iss(line);
-		std::string value;
-		std::vector<std::string> values;
-		//std::vector<std::vector<std::string>> feature_pixels_position;
-		if (currentRow == 0) { continue; }
-
-		int currentColumn = 0;
-		int nextFeature = 0;
-		// 使用字段分隔符拆分每一行的数据
-		while (std::getline(iss, value, delimiter)) {
-			++currentColumn;
-
-			// 如果当前列是目标列，则添加到 vector 中
-			if (currentColumn == feature_id_series[nextFeature] + 1) {
-				//std::cout << currentRow - 1 << " " << currentColumn << " " << value << "\n";
-				feature_pixels_position[nextFeature][currentRow - 1] = value;
-				nextFeature++;
-			}
-		}
-
-
-	}
-	return;
-
-
-}
+//auto GetFeaturePointsPixels(const std::string& feature_rgb_path, std::vector<std::vector<std::string>>& feature_pixels_position, char delimiter)
+//{
+//	//// 打开文本文件
+//	std::ifstream file(feature_rgb_path);
+//
+//	// 检查文件是否成功打开
+//	if (!file.is_open()) {
+//		std::cerr << "Error opening file" << std::endl;
+//		//return 1;
+//		exit(1);
+//	}
+//
+//
+//	std::string line;
+//	// 逐行读取文件内容
+//	for (int currentRow = 0; std::getline(file, line); ++currentRow) {
+//		// 使用字符串流解析每一行的数据
+//		std::istringstream iss(line);
+//		std::string value;
+//		std::vector<std::string> values;
+//		//std::vector<std::vector<std::string>> feature_pixels_position;
+//		if (currentRow == 0) { continue; }
+//
+//		int currentColumn = 0;
+//		int nextFeature = 0;
+//		// 使用字段分隔符拆分每一行的数据
+//		while (std::getline(iss, value, delimiter)) {
+//			++currentColumn;
+//
+//			// 如果当前列是目标列，则添加到 vector 中
+//			if (currentColumn == feature_id_series[nextFeature] + 1) {
+//				//std::cout << currentRow - 1 << " " << currentColumn << " " << value << "\n";
+//				feature_pixels_position[nextFeature][currentRow - 1] = value;
+//				nextFeature++;
+//			}
+//		}
+//
+//
+//	}
+//	return;
+//
+//
+//}
 
 
 
@@ -145,18 +145,70 @@ int main()
 {
 	try {
 		double minVal, maxVal;
-		std::string  depth_video_path = "D:/aaaLab/aaagraduate/SaveVideo/DepthSavePoll/depth_0.avi";
-		std::string  rgb_video_path = "D:/aaaLab/aaagraduate/SaveVideo/DepthSavePoll/rgb_0.avi";
+		//std::string  depth_video_path = "D:/aaaLab/aaagraduate/SaveVideo/DepthSavePoll/depth_0.avi";
+		//std::string  rgb_video_path = "D:/aaaLab/aaagraduate/SaveVideo/DepthSavePoll/rgb_0.avi";
+
+
 		// 存储成图片形式的地址
-		std::string  depth_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/DepthImgs";
-		std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/RGBImgs";
+
+		// -------------------
+		//std::string  depth_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/DepthImgs"; // 深度图文件夹路径
+		//std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/RGBImgs"; // rgb文件夹路径
+		//std::string feature_rgb_path = "D:/aaaLab/aaagraduate/SaveVideo/source/rgb.txt"; // 特征点像素索引txt文件路径
+		//std::string feature_3D_path = "D:/aaaLab/aaagraduate/SaveVideo/source/points.txt"; // 存储特征点三维空间坐标
+		//std::string motion_vec_path = "D:/aaaLab/aaagraduate/SaveVideo/source/motion.txt"; // 存储运动信息
+		// -------------------
+
+		// ------------------- 20240314 1 ------------------- 
+		//std::string  depth_folder_path ="D:/aaaLab/aaagraduate/SaveVideo/source/20240314/DepthImgs1";
+		//std::string  rgb_folder_path =	"D:/aaaLab/aaagraduate/SaveVideo/source/20240314/RGBImgs1";
+		//std::string feature_rgb_path =	"D:/aaaLab/aaagraduate/SaveVideo/source/20240314/0312_68_01.txt";
+		//std::string feature_3D_path =	"D:/aaaLab/aaagraduate/SaveVideo/source/20240314/points1.txt";
+		//std::string motion_vec_path =	"D:/aaaLab/aaagraduate/SaveVideo/source/20240314/motion1.txt";
+		// ------------------- end ------------------- 
+
+		// ------------------- 20240314 2 ------------------- 
+		std::string  depth_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240314/DepthImgs2";
+		std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240314/RGBImgs2";
+		std::string feature_rgb_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240314/0312_68_02.txt";
+		std::string feature_3D_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240314/points2.txt";
+		std::string motion_vec_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240314/motion2.txt";
+		// ------------------- end ------------------- 
+
+		// ------------------- 20240326 1 ------------------- 
+		//std::string  depth_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/DepthImgs1";
+		//std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/RGBImgs1";
+		//std::string feature_rgb_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/1_68.txt";
+		//std::string feature_3D_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/points1.txt";
+		//std::string motion_vec_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/motion1.txt";
+		// ------------------- end ------------------- 
+
+		// ------------------- 20240326 2 ------------------- 
+		//std::string  depth_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/DepthImgs2";
+		//std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/RGBImgs2";
+		//std::string feature_rgb_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/2_68.txt";
+		//std::string feature_3D_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/points2.txt";
+		//std::string motion_vec_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/motion2.txt";
+		// ------------------- end ------------------- 
+
+		// ------------------- 20240326 3 ------------------- 
+		//std::string  depth_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/DepthImgs3";
+		//std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/RGBImgs3";
+		//std::string feature_rgb_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/3_68.txt";
+		//std::string feature_3D_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/points3.txt";
+		//std::string motion_vec_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/motion3.txt";
+		// ------------------- end ------------------- 
+
+
+
+
 
 		////std::ifstream file("D:/aaaLab/aaagraduate/SaveVideo/src/rgb.txt");
 		std::regex pattern(R"(\((\d+),(\d+)\))");
 
 		//// 打开文本文件
 		//std::ifstream feature_rgb_file("D:/aaaLab/aaagraduate/SaveVideo/src/rgb.txt");
-		std::string feature_rgb_path = "D:/aaaLab/aaagraduate/SaveVideo/source/rgb.txt";
+		//std::string feature_rgb_path = "D:/aaaLab/aaagraduate/SaveVideo/source/rgb.txt";
 
 		// 打开文件
 		std::ifstream rgb_count_file(rgb_folder_path + "/frame_num.txt");
@@ -170,14 +222,34 @@ int main()
 		rgb_count_file >> countmax;
 		// 关闭文件
 		rgb_count_file.close();
+
+		// 生成图片文件序号
+		std::vector<std::string> file_index;
+		for (int i = 0; i < countmax; i++)
+		{
+			std::string name = std::to_string(i);
+			int t = name.length(); //存储当前序号的数字位数
+			
+			for (int j = 0; j < 6 - t; j++)
+			{
+				name = "0" + name;
+			}
+			file_index.push_back(name);
+			std::cout << name << '\n';
+		}
+
+
+
 		
-		CameraModel camera_model;
+		//CameraModel camera_model;
+		std::string camera_params_file_path = "D:/aaaLab/aaagraduate/SaveVideo/source/CameraParams.json";
+		CameraModel camera_model(camera_params_file_path);
 		Utility utility;
 
 		// 创建一个 vector 用于存储每个元素
 		std::vector<std::vector<std::string>> feature_pixels_position;
 		// 提前分配空间
-		feature_pixels_position.resize(static_cast<int>(feature_num));
+		feature_pixels_position.resize(static_cast<int>(utility.feature_num));
 		for (auto& row : feature_pixels_position) {
 			row.resize(static_cast<int>(countmax));
 		}
@@ -187,7 +259,7 @@ int main()
 		// 提前分配空间
 		feature_pixels_3D.resize(static_cast<int>(countmax));
 		for (auto& row : feature_pixels_3D) {
-			row.resize(static_cast<int>(feature_num));
+			row.resize(static_cast<int>(utility.feature_num));
 		}
 
 		// motion_vec 存储每一帧的运动情况
@@ -198,7 +270,7 @@ int main()
 			row.resize(static_cast<int>(6));
 		}
 
-		GetFeaturePointsPixels(feature_rgb_path, feature_pixels_position, '\t');
+		utility.GetFeaturePointsPixels(feature_rgb_path, feature_pixels_position, '\t');
 
 		// 计算像素到对应空间点坐标映射关系
 		cv::Mat homogeneous_coords_all(3, IMAGE_HEIGHT_480 * IMAGE_WIDTH_640, CV_32F);
@@ -235,8 +307,8 @@ int main()
 
 		// 记录原始depth中为0的点在rgb坐标系下对应的坐标，便于剔除异常数据
 		cv::Mat nodepth_point = (cv::Mat_<float>(3, 1) << 0.0f, 0.0f, 0.0f);
-		cv::Mat points_inrgb = camera_model.R_depth2rgb * nodepth_point + camera_model.T_depth2rgb;
-		std::cout << points_inrgb << '\n';
+		cv::Mat nodepth_point_inrgb = camera_model.R_depth2rgb * nodepth_point + camera_model.T_depth2rgb;
+		std::cout << nodepth_point_inrgb << '\n';
 
 
 
@@ -253,8 +325,10 @@ int main()
 		{
 			auto start_time = std::chrono::high_resolution_clock::now();
 
-			std::string rgb_file_name = rgb_folder_path + "/rgb_" + std::to_string(i) + ".png"; 
-			std::string depth_file_name = depth_folder_path + "/depth_" + std::to_string(i) + ".png";
+			//std::string rgb_file_name = rgb_folder_path + "/rgb_" + std::to_string(i) + ".png"; 
+			//std::string depth_file_name = depth_folder_path + "/depth_" + std::to_string(i) + ".png";
+			std::string rgb_file_name = rgb_folder_path + "/rgb_" + file_index[i] + ".png";
+			std::string depth_file_name = depth_folder_path + "/depth_" + file_index[i] + ".png";
 			//std::cout << rgb_file_name << "\n";
 			cv::Mat rgb = cv::imread(rgb_file_name);
 			cv::Mat depth = cv::imread(depth_file_name, cv::IMREAD_UNCHANGED);
@@ -272,6 +346,9 @@ int main()
 			//cv::Mat rgb_undistorted;
 			//cv::undistort(rgb, rgb_undistorted, camera_model.RGBCameraMatrix, camera_model.RGBDistCoeffs);
 			//cv::imshow("rgb_undistorted", rgb_undistorted);
+			auto end_time = std::chrono::high_resolution_clock::now();
+			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+			std::cout << "duration: " << duration.count() << '\n';
 
 			// 获得深度图每个像素点对应的3D空间坐标 (x, y, z)
 			cv::Mat points = camera_model.Get3DPoints(depth, pixels_to_points);
@@ -283,6 +360,8 @@ int main()
 			//cv::imshow("n", n);
 			//cv::minMaxLoc(points_z, &minVal, &maxVal);
 			//std::cout << minVal << " " << maxVal << '\n';
+
+			
 
 
 
@@ -378,26 +457,28 @@ int main()
 			//std::cout << minVal << " " << maxVal << '\n';
 
 			//cv::normalize(depth_inrgb, depth_inrgb_CV8U, 0, 1, cv::NORM_MINMAX);
-			cv::imshow("depth_inrgb_CV8U", depth_inrgb_CV8U);
+			cv::imshow("depth_inrgb_CV8U", depth_inrgb_CV8U); ////
 			//cv::waitKey(0);
 
 
 
 			// 将深度图归一化到0-255范围，以便与 RGB 图像叠加
-			cv::Mat depth_inrgb_normalized;
-			cv::normalize(depth_inrgb_CV8U, depth_inrgb_normalized, 0, 255, cv::NORM_MINMAX);
+			//cv::Mat depth_inrgb_normalized;
+			//cv::normalize(depth_inrgb_CV8U, depth_inrgb_normalized, 0, 255, cv::NORM_MINMAX);
 
 
 			// 将深度图转换为三通道，以便与 RGB 图像叠加
 			cv::Mat depth_inrgb_color; 
-			cv::applyColorMap(depth_inrgb_normalized, depth_inrgb_color, cv::COLORMAP_JET);
+			//cv::applyColorMap(depth_inrgb_normalized, depth_inrgb_color, cv::COLORMAP_JET);
+			cv::applyColorMap(depth_inrgb_CV8U, depth_inrgb_color, cv::COLORMAP_JET);
+
 
 			// 叠加深度图+rgb图像
 			cv::Mat rgb_depth;
 			double depthweight = 0.5;
 			//cv::addWeighted(depth_inrgb_color, depthweight, frame, (1 - depthweight), 0.0, rgb_depth);
 			cv::addWeighted(depth_inrgb_color, depthweight, rgb, (1 - depthweight), 0.0, rgb_depth);
-			cv::imshow("Mixed", rgb_depth);
+			cv::imshow("Mixed", rgb_depth); ////
 
 			// 显示帧
 			//cv::imshow("Camera Feed", frame);
@@ -410,11 +491,11 @@ int main()
 			//file.close();
 			//std::string value = elements[i];
 			std::vector<cv::Mat> position;
-			position.resize(feature_num * 1.5);
+			position.resize(utility.feature_num * 1.5);
 
 			bool is_empty = false;
 
-			for (int feature_id = 0; feature_id < feature_num; feature_id++)
+			for (int feature_id = 0; feature_id < utility.feature_num; feature_id++)
 			{
 				std::string value = feature_pixels_position[feature_id][i];
 				
@@ -441,12 +522,12 @@ int main()
 					float point_y = points_rgbcoord.at<cv::Vec3f>(y, x)[1];
 					float point_z = points_rgbcoord.at<cv::Vec3f>(y, x)[2];
 
-					std::vector<cv::Mat> channels;
-					cv::split(points_rgbcoord, channels);
-					cv::Point feature1(x, y);
-					cv::normalize(channels[0], channels[0], 0, 1, cv::NORM_MINMAX);
-					cv::circle(channels[0], feature1, 3, cv::Scalar(255), -1);
-					cv::imshow("channels[0]", channels[0]);
+					//std::vector<cv::Mat> channels;
+					//cv::split(points_rgbcoord, channels);
+					//cv::Point feature1(x, y);
+					//cv::normalize(channels[0], channels[0], 0, 1, cv::NORM_MINMAX);
+					//cv::circle(channels[0], feature1, 3, cv::Scalar(255), -1);
+					//cv::imshow("channels[0]", channels[0]);
 
 
 
@@ -458,8 +539,8 @@ int main()
 					//}
 					
 					//std::cout << y << " " << x << " " << depth_inrgb.at<uint16_t>(x, y) << '\n';
-					//std::cout << points_inrgb.at<float>(2, 0) << '\n';
-					if (std::abs(point_z - points_inrgb.at<float>(2, 0)) < 1e-4)
+					//std::cout << nodepth_point_inrgb.at<float>(2, 0) << '\n';
+					if (std::abs(point_z - nodepth_point_inrgb.at<float>(2, 0)) < 1e-4)
 					{
 						std::cout << x << " " << y << '\n';
 						std::cout << depth_inrgb.at<float>(y, x) << '\n';
@@ -490,14 +571,17 @@ int main()
 
 			}
 			cv::imshow("Camera Feed", rgb);
-
+			//std::cout << camera_model.RGBRotationMat << "\n";
 			cv::Mat motion = utility.PositionToMotion((position[1] + position[2]) / 2, (position[3] + position[4]) / 2, position[5], position[0]);
+			
+			
 			
 			for (int motion_id = 0; motion_id < 6; motion_id++)
 			{
 				if (!is_empty)
 				{
 					motion_vec[i][motion_id] = std::to_string( motion.at<float>(motion_id, 0));
+					utility.DrawCoord(rgb, camera_model.RGBCameraMatrix, (position[1] + position[2]) / 2, (position[3] + position[4]) / 2, position[5], position[0]);
 				}
 				else
 				{
@@ -505,11 +589,14 @@ int main()
 				}
 				
 			}
+			cv::imshow("Camera Feed", rgb); ////
 
-			auto end_time = std::chrono::high_resolution_clock::now();
-			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+			end_time = std::chrono::high_resolution_clock::now();
+			duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+			//auto end_time = std::chrono::high_resolution_clock::now();
+			//auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
 			int new_wait_time = wait_time - static_cast<int>(duration.count());
-			//std::cout << new_wait_time << " " << wait_time << " " << duration.count() << " " << static_cast<int>(duration.count());
+			//std::cout << new_wait_time << " " << wait_time << " " << duration.count() << " " << static_cast<int>(duration.count()) << '\n';
 			
 			if (new_wait_time >= 1)
 			{
@@ -528,11 +615,11 @@ int main()
 
 		}
 		//file.close();
-		std::string feature_3D_path = "D:/aaaLab/aaagraduate/SaveVideo/source/points.txt";
+		//std::string feature_3D_path = "D:/aaaLab/aaagraduate/SaveVideo/source/points.txt";
 		utility.saveToTxt(feature_pixels_3D, feature_3D_path, '\t');
 		//utility.saveToTxt<std::string>(feature_pixels_3D, feature_3D_path, '\t');
 
-		std::string motion_vec_path = "D:/aaaLab/aaagraduate/SaveVideo/source/motion.txt";
+		//std::string motion_vec_path = "D:/aaaLab/aaagraduate/SaveVideo/source/motion.txt";
 		utility.saveToTxt(motion_vec, motion_vec_path, '\t');
 		//utility.saveToTxt<float>(motion_vec, motion_vec_path, '\t');
 

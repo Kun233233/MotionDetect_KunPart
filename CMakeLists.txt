@@ -27,6 +27,7 @@ MESSAGE(STATUS "add_subdirectory 1")
 	add_subdirectory(DepthRGBRegistration)
 	add_subdirectory(PCLTest)
 	add_subdirectory(FeaturePointsInfo)
+	add_subdirectory(BoostPythonCam)
 else()
 
 	add_subdirectory(DepthSaveEvent)
@@ -37,6 +38,7 @@ else()
 	add_subdirectory(DepthRGBRegistration)
 	add_subdirectory(PCLTest)
 	add_subdirectory(FeaturePointsInfo)
+	add_subdirectory(BoostPythonCam)
 
 endif()
 

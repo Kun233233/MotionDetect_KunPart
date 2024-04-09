@@ -189,3 +189,20 @@ int main()
 }
 
 
+
+
+//#include <opencv2/opencv.hpp>
+//#include <opencv2/core/cuda.hpp>
+//int main() {
+//    //检查是否支持CUDA
+//    if (cv::cuda::getCudaEnabledDeviceCount()) {
+//        std::cout << "检测到支持CUDA的设备数量" << cv::cuda::getCudaEnabledDeviceCount() << std::endl;
+//    }
+//    else {
+//        std::cout << "未检测到支持CUDA的设备" << std::endl;
+//    }
+//    return 0;
+//}
+
+
+

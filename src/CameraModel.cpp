@@ -1,5 +1,7 @@
 #include "CameraModel.h"
 
+using json = nlohmann::json;
+
 CameraModel::CameraModel()
 {
 	//this->max_depth = max_depth;
@@ -54,6 +56,124 @@ CameraModel::CameraModel()
 	this->R_depth2rgb = RGBRotationMat * DepthRotationMat.inv();
 	this->T_depth2rgb = (RGBTransVec.t() - R_depth2rgb * DepthTransVec.t()) * square_size;
 
+}
+
+CameraModel::CameraModel(std::string file_path)
+{
+	// 打开JSON文件
+	std::ifstream file(file_path);
+	if (!file.is_open()) {
+		std::cerr << "Error: Unable to open file." << std::endl;
+	}
+
+	// 读取JSON数据
+	json data;
+	file >> data;
+	//std::cout << data << "\n";
+	this->height = data["height"][0];
+	this->width = data["width"][0];
+
+	// 从JSON数据中提取矩阵和向量
+	std::vector<std::vector<float>> RGB_Matrix, Depth_Matrix;
+	std::vector<float> RGB_Dist_Coeffs, RGB_Rot_Vec, RGB_Trans_Vec, Depth_Dist_Coeffs, Depth_Rot_Vec, Depth_Trans_Vec;
+
+	for (const auto& row : data["RGB_Matrix"]) {
+		std::vector<float> temp_row;
+		for (const auto& element : row) {
+			temp_row.push_back(element);
+		}
+		RGB_Matrix.push_back(temp_row);
+	}
+	//std::cout << RGB_Matrix[0][0] << "\n";
+
+	for (const auto& element : data["RGB_Dist_Coeffs"]) {
+		RGB_Dist_Coeffs.push_back(element);
+	}
+
+	for (const auto& element : data["RGB_Rot_Vec"]) {
+		RGB_Rot_Vec.push_back(element);
+	}
+
+	for (const auto& element : data["RGB_Trans_Vec"]) {
+		RGB_Trans_Vec.push_back(element);
+	}
+
+
+	for (const auto& row : data["Depth_Matrix"]) {
+		std::vector<float> temp_row;
+		for (const auto& element : row) {
+			temp_row.push_back(element);
+		}
+		Depth_Matrix.push_back(temp_row);
+	}
+
+	for (const auto& element : data["Depth_Dist_Coeffs"]) {
+		Depth_Dist_Coeffs.push_back(element);
+	}
+
+	for (const auto& element : data["Depth_Rot_Vec"]) {
+		Depth_Rot_Vec.push_back(element);
+	}
+
+	for (const auto& element : data["Depth_Trans_Vec"]) {
+		Depth_Trans_Vec.push_back(element);
+	}
+
+	this->square_size = 1.0f;
+
+	// 将数据转换为cv::Mat变量
+	this->RGBCameraMatrix.create(RGB_Matrix.size(), RGB_Matrix[0].size(), CV_32F);
+	this->DepthCameraMatrix.create(Depth_Matrix.size(), Depth_Matrix[0].size(), CV_32F);
+	//std::cout << RGBCameraMatrix << "\n";
+	//std::cout << 1 << "\n";
+
+	this->RGBDistCoeffs.create(1, RGB_Dist_Coeffs.size(), CV_32F);
+	this->DepthDistCoeffs.create(1, Depth_Dist_Coeffs.size(), CV_32F);
+	//std::cout << 2 << "\n";
+
+	this->RGBRotVec.create(1, RGB_Rot_Vec.size(), CV_32F);
+	this->RGBTransVec.create(1, RGB_Trans_Vec.size(), CV_32F);
+	this->DepthRotVec.create(1, Depth_Rot_Vec.size(), CV_32F);
+	this->DepthTransVec.create(1, Depth_Trans_Vec.size(), CV_32F);
+	//std::cout << 3 << "\n";
+
+
+	//cv::Rodrigues(this->DepthRotVec, this->DepthRotationMat);
+
+	//this->R_depth2rgb = RGBRotationMat * DepthRotationMat.inv();
+	//this->T_depth2rgb = (RGBTransVec.t() - R_depth2rgb * DepthTransVec.t()) * square_size;
+
+	//cv::Rodrigues(this->RGBRotVec, this->RGBRotationMat);
+
+	// 内参矩阵均为4*4，因此在一个循环内进行赋值
+	for (int i = 0; i < RGB_Matrix.size(); ++i) {
+		for (int j = 0; j < RGB_Matrix[i].size(); ++j) {
+			
+			this->RGBCameraMatrix.at<float>(i, j) = RGB_Matrix[i][j];
+			this->DepthCameraMatrix.at<float>(i, j) = Depth_Matrix[i][j];
+			//std::cout <<i<<j<< this->RGBCameraMatrix << RGB_Matrix[i][j] << '\n';
+		}
+	}
+	//std::cout << this->RGBCameraMatrix << '\n';
+	this->RGBCameraMatrix_inv = RGBCameraMatrix.inv();
+	this->DepthCameraMatrix_inv = DepthCameraMatrix.inv();
+
+	for (int i = 0; i < RGB_Dist_Coeffs.size(); ++i) {
+		RGBDistCoeffs.at<float>(0, i) = RGB_Dist_Coeffs[i];
+		DepthDistCoeffs.at<float>(0, i) = Depth_Dist_Coeffs[i];
+	}
+	for (int i = 0; i < RGB_Rot_Vec.size(); ++i) {
+		RGBRotVec.at<float>(0, i) = RGB_Rot_Vec[i];
+		RGBTransVec.at<float>(0, i) = RGB_Trans_Vec[i];
+		DepthRotVec.at<float>(0, i) = Depth_Rot_Vec[i];
+		DepthTransVec.at<float>(0, i) = Depth_Trans_Vec[i];
+	}
+
+	cv::Rodrigues(this->RGBRotVec, this->RGBRotationMat);
+	cv::Rodrigues(this->DepthRotVec, this->DepthRotationMat);
+
+	this->R_depth2rgb = RGBRotationMat * DepthRotationMat.inv();
+	this->T_depth2rgb = (RGBTransVec.t() - R_depth2rgb * DepthTransVec.t()) * square_size;
 }
 
 CameraModel::~CameraModel()

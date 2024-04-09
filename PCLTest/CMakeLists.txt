@@ -12,7 +12,9 @@ include_directories(
     ../ThirdParty/OpenNI2/Include
     ../include
     # ../ThirdParty/OpenCV420/Windows/include
-	../ThirdParty/OpenCV470/opencv/build/include
+    #../ThirdParty/OpenCV470/opencv/build/include
+	../ThirdParty/opencv-4.8.0/cudabuild/install/include/opencv2
+	../ThirdParty/opencv-4.8.0/cudabuild/install/include
     ../ThirdParty/UvcSwapper/Include
 
 	${PCL_INCLUDE_DIRS}
@@ -27,8 +29,9 @@ if(CMAKE_SYSTEM_NAME MATCHES "Windows")
 		link_directories(
 			../ThirdParty/OpenNI2/windows/x64-Release
 			# ../ThirdParty/OpenCV420/Windows/lib/win_x64
-			../ThirdParty/OpenCV470/opencv/build/x64/vc16/lib
+			# ../ThirdParty/OpenCV470/opencv/build/x64/vc16/lib
 			# ../ThirdParty/OpenCV470/opencv/build/x64/vc16/bin
+			../ThirdParty/opencv-4.8.0/cudabuild/install/x64/vc17/lib
 			../ThirdParty/UvcSwapper/x64-Release
 
 			${PCL_LIBRARY_DIRS}
@@ -104,16 +107,16 @@ file(GLOB SRC "*.h"
 #add_executable(${TARGET} ${SRC_FILE})
 add_executable(${TARGET} ${SRC})
 
-target_link_libraries(${TARGET} OpenNI2 Uvc-Swapper opencv_world470 ${PCL_LIBRARIES} pcl_visualization)
+target_link_libraries(${TARGET} OpenNI2 Uvc-Swapper opencv_world480 ${PCL_LIBRARIES} pcl_visualization)
 
 #set_target_properties(${TARGET} PROPERTIES INSTALL_RPATH "${ORIGIN}" )
 
 
 # 将 OpenCV 的 DLL 文件复制到程序输出目录中
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${OPENCV_DLL_DIR}/opencv_world470.dll ${CMAKE_BINARY_DIR}/Release
-	COMMAND ${CMAKE_COMMAND} -E copy ${OPENCV_DLL_DIR}/opencv_world470.pdb ${CMAKE_BINARY_DIR}/Release
-)
+# add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+#     COMMAND ${CMAKE_COMMAND} -E copy ${OPENCV_DLL_DIR}/opencv_world480.dll ${CMAKE_BINARY_DIR}/Release
+# 	COMMAND ${CMAKE_COMMAND} -E copy ${OPENCV_DLL_DIR}/opencv_world480.pdb ${CMAKE_BINARY_DIR}/Release
+# )
 
 
 
