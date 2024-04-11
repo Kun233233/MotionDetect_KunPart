@@ -7,10 +7,11 @@ project(${TARGET})
 # find_package(PCL 1.14.0 REQUIRED COMPONENTS common io)
 
 set(PYTHON_ENV_DIR D:/conda_envs/main-py38)
+set(PYTHON_PACKAGES_PATH D:/conda_envs/main-py38/Lib/site-packages)
 
 include_directories(
-    # ../ThirdParty/Common
-    # ../ThirdParty/OpenNI2/Include
+    ../ThirdParty/Common
+    ../ThirdParty/OpenNI2/Include
     ../include
     # ../ThirdParty/OpenCV420/Windows/include
     ../ThirdParty/OpenCV470/opencv/build/include
@@ -20,7 +21,7 @@ include_directories(
 	${PYTHON_ENV_DIR}/include
 	${PYTHON_ENV_DIR}/Lib/site-packages/numpy/core/include
 	# ${CUDA_PATH}/include #cuda
-    # ../ThirdParty/UvcSwapper/Include
+    ../ThirdParty/UvcSwapper/Include
 	../ThirdParty/BoostPythonBuild/include/boost-1_79
 	../ThirdParty/json-develop/include
 	
@@ -35,7 +36,7 @@ if(CMAKE_SYSTEM_NAME MATCHES "Windows")
 		MESSAGE(STATUS "IS Windows x64")
 		# 64 bits
 		link_directories(
-			# ../ThirdParty/OpenNI2/windows/x64-Release
+			../ThirdParty/OpenNI2/windows/x64-Release
 			# ../ThirdParty/OpenCV420/Windows/lib/win_x64
 			../ThirdParty/OpenCV470/opencv/build/x64/vc16/lib
 			# ../ThirdParty/OpenCV470/opencv/build/x64/vc16/bin
@@ -43,7 +44,7 @@ if(CMAKE_SYSTEM_NAME MATCHES "Windows")
 			../ThirdParty/BoostPythonBuild/lib
 			${PYTHON_ENV_DIR}/libs
 			# ${CUDA_PATH}/lib/x64 #cuda
-			# ../ThirdParty/UvcSwapper/x64-Release
+			../ThirdParty/UvcSwapper/x64-Release
 
 			# ${PCL_LIBRARY_DIRS}
 		)
@@ -123,8 +124,8 @@ file(GLOB SRC "*.h"
 set(BUILD_SHARED_LIBS ON)
 add_library(${TARGET} ${SRC})
 
-# target_link_libraries(${TARGET} OpenNI2 Uvc-Swapper opencv_world470 libboost_python38-vc143-mt-x64-1_79 )
-target_link_libraries(${TARGET} opencv_world470 libboost_python38-vc143-mt-x64-1_79 )
+target_link_libraries(${TARGET} OpenNI2 Uvc-Swapper opencv_world470 libboost_python38-vc143-mt-x64-1_79 )
+# target_link_libraries(${TARGET} opencv_world470 libboost_python38-vc143-mt-x64-1_79 )
 
 
 #set_target_properties(${TARGET} PROPERTIES INSTALL_RPATH "${ORIGIN}" )
@@ -135,6 +136,22 @@ target_link_libraries(${TARGET} opencv_world470 libboost_python38-vc143-mt-x64-1
 #     COMMAND ${CMAKE_COMMAND} -E copy ${OPENCV_DLL_DIR}/opencv_world480.dll ${CMAKE_BINARY_DIR}/Release
 # 	COMMAND ${CMAKE_COMMAND} -E copy ${OPENCV_DLL_DIR}/opencv_world480.pdb ${CMAKE_BINARY_DIR}/Release
 # )
+
+
+# # 将 .pyd 文件和相关 DLL 文件安装到指定路径
+# install(TARGETS ${PROJECT_NAME}
+#         ${PYTHON_INSTALL_CONFIGURATIONS}
+#         RUNTIME DESTINATION ${PYTHON_PACKAGES_PATH}/boost_python_cam COMPONENT python
+#         LIBRARY DESTINATION ${PYTHON_PACKAGES_PATH}/boost_python_cam COMPONENT python
+#         ${PYTHON_INSTALL_ARCHIVE}
+#         )
+
+# # 如果有相关的 DLL 文件需要一并安装，也可以像下面这样添加
+# install(FILES
+#         ${Boost_LIBRARY_DIRS}/boost_python${PYTHON3_VERSION_MAJOR}${PYTHON3_VERSION_MINOR}.dll
+#         DESTINATION ${PYTHON_PACKAGES_PATH}/boost_python_cam
+#         COMPONENT python
+#         )
 
 
 

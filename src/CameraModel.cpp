@@ -248,7 +248,7 @@ void CameraModel::hMirrorTrans(const cv::Mat& src, cv::Mat& dst)
 
 cv::Mat CameraModel::Get3DPoints(const cv::Mat& depth, const cv::Mat& pixels_to_points_map)
 {
-	cv::Mat points(3, IMAGE_HEIGHT_480 * IMAGE_WIDTH_640, CV_32F);
+	cv::Mat points(3, this->height * this->width, CV_32F);
 
 	// 构建齐次坐标
 	// 对depth进行reshape操作，操作后的大小为[1, 640*480]
@@ -274,7 +274,7 @@ cv::Mat CameraModel::GetPixels(const cv::Mat& points, const cv::Mat& camera_matr
 	cv::Mat z = pixels.row(2);
 
 	// 获取原来像素排列顺序的深度值，后续remap调整
-	cv::Mat depth_new = z.reshape(1, 480).clone();
+	cv::Mat depth_new = z.reshape(1, this->height).clone();
 	//double minVal, maxVal;
 	//cv::minMaxLoc(depth_new, &minVal, &maxVal);
 	//std::cout << minVal << " " << maxVal << '\n';
@@ -300,7 +300,7 @@ cv::Mat CameraModel::GetPixels(const cv::Mat& points, const cv::Mat& camera_matr
 	// depth_in_rgb: 存储转换至rgb图像下的深度图
 	//cv::Mat depth_in_rgb = cv::Mat::zeros(IMAGE_HEIGHT_480, IMAGE_WIDTH_640, CV_16U);
 	//cv::Mat depth_in_rgb = cv::Mat::zeros(IMAGE_HEIGHT_480, IMAGE_WIDTH_640, CV_32FC1);
-	cv::Mat depth_in_rgb = cv::Mat::zeros(IMAGE_HEIGHT_480, IMAGE_WIDTH_640, CV_32FC1);
+	cv::Mat depth_in_rgb = cv::Mat::zeros(this->height, this->width, CV_32FC1);
 	//cv::minMaxLoc(depth_in_rgb, &minVal, &maxVal);
 	//std::cout << minVal << " " << maxVal << '\n';
 
@@ -313,10 +313,10 @@ cv::Mat CameraModel::GetPixels(const cv::Mat& points, const cv::Mat& camera_matr
 
 	// 使用 OpenMP 并行化外层循环
 	//#pragma omp parallel for
-	for (int y = 0; y < IMAGE_HEIGHT_480; ++y)
+	for (int y = 0; y < this->height; ++y)
 	{
-		int column__ = y * IMAGE_WIDTH_640;
-		for (int x = 0; x < IMAGE_WIDTH_640; ++x)
+		int column__ = y * this->width;
+		for (int x = 0; x < this->width; ++x)
 		{
 			// 计算原始depth(x, y)处的深度值应该在rgb下的位置(x_inrgb, y_inrgb)
 			//int column = y * IMAGE_WIDTH_640 + x;
@@ -324,7 +324,7 @@ cv::Mat CameraModel::GetPixels(const cv::Mat& points, const cv::Mat& camera_matr
 			float x_inrgb = pixels.at<float>(0, column);
 			float y_inrgb = pixels.at<float>(1, column);
 
-			if (y_inrgb >= 1 && y_inrgb <= IMAGE_HEIGHT_480 - 1 && x_inrgb >= 1 && x_inrgb <= IMAGE_WIDTH_640 - 1)
+			if (y_inrgb >= 1 && y_inrgb <= this->height - 1 && x_inrgb >= 1 && x_inrgb <= this->width - 1)
 			{
 
 				map_x.at<float>(y_inrgb, x_inrgb) = x;
@@ -350,15 +350,15 @@ cv::Mat CameraModel::GetPixels(const cv::Mat& points, const cv::Mat& camera_matr
 cv::Mat CameraModel::PixelsCoordTransfer(const cv::Mat& points)
 {
 	cv::Mat points_x_rgb;
-	cv::Mat points_x = points.row(0).reshape(1, 480);
+	cv::Mat points_x = points.row(0).reshape(1, this->height);
 	cv::remap(points_x, points_x_rgb, map_x, map_y, cv::INTER_LANCZOS4, cv::BORDER_REPLICATE, cv::Scalar());
 
 	cv::Mat points_y_rgb;
-	cv::Mat points_y = points.row(1).reshape(1, 480);
+	cv::Mat points_y = points.row(1).reshape(1, this->height);
 	cv::remap(points_y, points_y_rgb, map_x, map_y, cv::INTER_LANCZOS4, cv::BORDER_REPLICATE, cv::Scalar());
 
 	cv::Mat points_z_rgb;
-	cv::Mat points_z = points.row(2).reshape(1, 480);
+	cv::Mat points_z = points.row(2).reshape(1, this->height);
 	cv::remap(points_z, points_z_rgb, map_x, map_y, cv::INTER_LANCZOS4, cv::BORDER_REPLICATE, cv::Scalar());
 
 	// 创建一个空的三通道矩阵

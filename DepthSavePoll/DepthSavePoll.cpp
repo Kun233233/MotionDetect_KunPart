@@ -16,6 +16,8 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <chrono>
+#include <thread>
 
 using namespace std;
 using namespace openni;
@@ -101,6 +103,52 @@ void hMirrorTrans(const Mat& src, Mat& dst)
 	}
 
 }
+
+void cap_depth(Status& rc, VideoStream& streamDepth, VideoFrameRef&  frameDepth, cv::Mat& hScaledDepth, cv::Mat& hImageDepth)
+{
+	rc = streamDepth.readFrame(&frameDepth);
+	Mat mScaledDepth, mImageDepth;
+	if (rc == STATUS_OK)
+	{
+		// 将深度数据转换成OpenCV格式
+		cv::Mat depthtemp(frameDepth.getHeight(), frameDepth.getWidth(), CV_16UC1, (void*)frameDepth.getData()); //CV_16UC1
+		mImageDepth = depthtemp;
+		// 为了让深度图像显示的更加明显一些，将CV_16UC1 ==> CV_8U格式
+		//Mat mScaledDepth, hScaledDepth;
+
+		mImageDepth.convertTo(mScaledDepth, CV_8U, 255.0 / 1000);
+
+		//水平镜像深度图
+		hMirrorTrans(mScaledDepth, hScaledDepth);
+		// 显示出深度图像
+		imshow("Depth Image", hScaledDepth);
+
+		// 显示CV_16UC1格式的深度图
+		hMirrorTrans(mImageDepth, hImageDepth);
+		imshow("Origin Depth Image", hImageDepth);
+	}
+
+}
+
+void cap_rgb(cv::VideoCapture& imgCap, cv::Mat& frame)
+{
+	// 读取帧
+	//cv::Mat frame;
+	imgCap >> frame;
+
+	// 检查帧是否成功读取
+	if (frame.empty()) {
+		std::cerr << "Error: Failed to capture frame." << std::endl;
+		return;
+	}
+
+	// 在这里可以对帧进行处理
+
+	// 显示帧
+	//cv::imshow("Camera Feed", frame);
+}
+
+
 
 int main()
 {
@@ -288,11 +336,23 @@ int main()
 
 		// 记录循环次数
 		int count = 0;
+		int totaltime = 0;
 
 		while (true)
 		{
+			//auto start_time = std::chrono::high_resolution_clock::now();
+
+			//cv::Mat frame(480, 640, CV_8UC3);
+			//std::thread t2(cap_rgb, imgCap, frame);
+			//t2.join();
+
+			//auto start_time = std::chrono::high_resolution_clock::now();
 			// 读取数据流
 			rc = streamDepth.readFrame(&frameDepth);
+			//auto end_time = std::chrono::high_resolution_clock::now();
+			//auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+			//std::cout << "duration: " << duration.count() << '\n';
+			//totaltime += duration.count();
 			Mat mScaledDepth, hScaledDepth, mImageDepth, hImageDepth;
 			if (rc == STATUS_OK)
 			{
@@ -303,6 +363,8 @@ int main()
 				//Mat mScaledDepth, hScaledDepth;
 
 				mImageDepth.convertTo(mScaledDepth, CV_8U, 255.0 / iMaxDepth);
+
+				
 
 				//水平镜像深度图
 				hMirrorTrans(mScaledDepth, hScaledDepth);
@@ -361,6 +423,7 @@ int main()
 
 
 
+			//auto start_time = std::chrono::high_resolution_clock::now();
 
 			// 读取帧
 			cv::Mat frame;
@@ -372,10 +435,22 @@ int main()
 				break;
 			}
 
-			// 在这里可以对帧进行处理
+			//// 在这里可以对帧进行处理
 
-			// 显示帧
-			cv::imshow("Camera Feed", frame);
+			//// 显示帧
+			//cv::imshow("Camera Feed", frame);
+
+			//cv::Mat hScaledDepth, hImageDepth, frame;
+			//std::thread t1(cap_depth, rc, streamDepth, frameDepth, hScaledDepth, hImageDepth);
+			//std::thread t2(cap_rgb, imgCap, frame);
+			//t1.join();
+			//t2.join();
+
+
+			//auto end_time = std::chrono::high_resolution_clock::now();
+			//auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+			//std::cout << "duration: " << duration.count() << '\n';
+			//totaltime += duration.count();
 
 
 
@@ -476,15 +551,21 @@ int main()
 			// 终止快捷键 ESC
 			if (waitKey(1) == 27)
 				break;
+
+			if (count == 2000)
+			{
+				break;
+			}
 		}
+		std::cout << "avg time: " << float(totaltime) / float(count) << '\n';
 
 		// 存入帧数
-		std::ofstream depth_count_file(depth_folder_path + "/frame_num.txt");
-		std::ofstream rgb_count_file(rgb_folder_path + "/frame_num.txt");
-		depth_count_file << count;
-		rgb_count_file << count;
-		depth_count_file.close();
-		rgb_count_file.close();
+		//std::ofstream depth_count_file(depth_folder_path + "/frame_num.txt");
+		//std::ofstream rgb_count_file(rgb_folder_path + "/frame_num.txt");
+		//depth_count_file << count;
+		//rgb_count_file << count;
+		//depth_count_file.close();
+		//rgb_count_file.close();
 
 		// 关闭数据流
 		streamDepth.destroy();

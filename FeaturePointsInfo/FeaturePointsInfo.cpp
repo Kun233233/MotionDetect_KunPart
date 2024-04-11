@@ -513,7 +513,7 @@ int main()
 					std::cerr << "No match found" << std::endl;
 				}
 
-				int index = y * IMAGE_WIDTH_640 + x;
+				//int index = y * IMAGE_WIDTH_640 + x;
 				// ¼ì²éË÷ÒıÊÇ·ñÔÚÍ¼Ïñ·¶Î§ÄÚ
 				//if (index >= 0 && index < points_rgbcoord.cols) {
 				if (true){
