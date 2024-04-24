@@ -50,7 +50,9 @@ public:
 	PyObject* get_mat(const std::string& mat_name);
 
 	//PyObject* get_feature_points_3D(const std::vector<uint16_t>& feature_x, const std::vector<uint16_t>& feature_y);
-	PyObject* get_feature_points_3D(const boost::python::list& feature_x, const boost::python::list& feature_y);
+	PyObject* get_feature_points_3D_6(const boost::python::list& feature_x, const boost::python::list& feature_y, bool draw);
+	PyObject* get_feature_points_3D(const boost::python::list& feature_x, const boost::python::list& feature_y, bool draw);
+
 
 	PyObject* get_pose_6p();
 

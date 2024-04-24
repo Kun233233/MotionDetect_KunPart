@@ -64,7 +64,7 @@ const int  UVC_TIME_OUT = 3000; //ms
 //												static_cast<int>(FeatureID::RightR), 
 //												static_cast<int>(FeatureID::MouseTop),
 //												 };
-
+const std::vector<int> feature_id_series_12 = { 22, 23, 30, 34, 37, 40, 43, 46, 49, 52, 55, 58 };
 
 
 
@@ -90,49 +90,6 @@ void showdevice() {
 	}
 }
 
-//auto GetFeaturePointsPixels(const std::string& feature_rgb_path, std::vector<std::vector<std::string>>& feature_pixels_position, char delimiter)
-//{
-//	//// 打开文本文件
-//	std::ifstream file(feature_rgb_path);
-//
-//	// 检查文件是否成功打开
-//	if (!file.is_open()) {
-//		std::cerr << "Error opening file" << std::endl;
-//		//return 1;
-//		exit(1);
-//	}
-//
-//
-//	std::string line;
-//	// 逐行读取文件内容
-//	for (int currentRow = 0; std::getline(file, line); ++currentRow) {
-//		// 使用字符串流解析每一行的数据
-//		std::istringstream iss(line);
-//		std::string value;
-//		std::vector<std::string> values;
-//		//std::vector<std::vector<std::string>> feature_pixels_position;
-//		if (currentRow == 0) { continue; }
-//
-//		int currentColumn = 0;
-//		int nextFeature = 0;
-//		// 使用字段分隔符拆分每一行的数据
-//		while (std::getline(iss, value, delimiter)) {
-//			++currentColumn;
-//
-//			// 如果当前列是目标列，则添加到 vector 中
-//			if (currentColumn == feature_id_series[nextFeature] + 1) {
-//				//std::cout << currentRow - 1 << " " << currentColumn << " " << value << "\n";
-//				feature_pixels_position[nextFeature][currentRow - 1] = value;
-//				nextFeature++;
-//			}
-//		}
-//
-//
-//	}
-//	return;
-//
-//
-//}
 
 
 
@@ -164,23 +121,26 @@ int main()
 		//std::string  rgb_folder_path =	"D:/aaaLab/aaagraduate/SaveVideo/source/20240314/RGBImgs1";
 		//std::string feature_rgb_path =	"D:/aaaLab/aaagraduate/SaveVideo/source/20240314/0312_68_01.txt";
 		//std::string feature_3D_path =	"D:/aaaLab/aaagraduate/SaveVideo/source/20240314/points1.txt";
+		//std::string feature_3D_path_12 =	"D:/aaaLab/aaagraduate/SaveVideo/source/20240314/points1_12.txt";
 		//std::string motion_vec_path =	"D:/aaaLab/aaagraduate/SaveVideo/source/20240314/motion1.txt";
 		// ------------------- end ------------------- 
 
 		// ------------------- 20240314 2 ------------------- 
-		std::string  depth_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240314/DepthImgs2";
-		std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240314/RGBImgs2";
-		std::string feature_rgb_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240314/0312_68_02.txt";
-		std::string feature_3D_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240314/points2.txt";
-		std::string motion_vec_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240314/motion2.txt";
+		//std::string  depth_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240314/DepthImgs2";
+		//std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240314/RGBImgs2";
+		//std::string feature_rgb_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240314/0312_68_02.txt";
+		//std::string feature_3D_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240314/points2.txt";
+		//std::string feature_3D_path_12 = "D:/aaaLab/aaagraduate/SaveVideo/source/20240314/points2_12.txt";
+		//std::string motion_vec_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240314/motion2.txt";
 		// ------------------- end ------------------- 
 
 		// ------------------- 20240326 1 ------------------- 
-		//std::string  depth_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/DepthImgs1";
-		//std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/RGBImgs1";
-		//std::string feature_rgb_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/1_68.txt";
-		//std::string feature_3D_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/points1.txt";
-		//std::string motion_vec_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/motion1.txt";
+		std::string  depth_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/DepthImgs1";
+		std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/RGBImgs1";
+		std::string feature_rgb_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/1_68.txt";
+		std::string feature_3D_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/points1.txt";
+		std::string feature_3D_path_12 = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/points1_12.txt";
+		std::string motion_vec_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/motion1.txt";
 		// ------------------- end ------------------- 
 
 		// ------------------- 20240326 2 ------------------- 
@@ -188,6 +148,7 @@ int main()
 		//std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/RGBImgs2";
 		//std::string feature_rgb_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/2_68.txt";
 		//std::string feature_3D_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/points2.txt";
+		//std::string feature_3D_path_12 = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/points2_12.txt";
 		//std::string motion_vec_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/motion2.txt";
 		// ------------------- end ------------------- 
 
@@ -196,6 +157,7 @@ int main()
 		//std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/RGBImgs3";
 		//std::string feature_rgb_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/3_68.txt";
 		//std::string feature_3D_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/points3.txt";
+		//std::string feature_3D_path_12 = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/points3_12.txt";
 		//std::string motion_vec_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/motion3.txt";
 		// ------------------- end ------------------- 
 
@@ -262,6 +224,22 @@ int main()
 			row.resize(static_cast<int>(utility.feature_num));
 		}
 
+		// 创建一个 vector 用于存储每个元素，12个特征点
+		std::vector<std::vector<std::string>> feature_pixels_position_12;
+		// 提前分配空间
+		feature_pixels_position_12.resize(static_cast<int>(12));
+		for (auto& row : feature_pixels_position_12) {
+			row.resize(static_cast<int>(countmax));
+		}
+
+		// 创建一个 vector 用于存储选中特征点的每一帧空间点坐标，12个特征点
+		std::vector<std::vector<std::string>> feature_pixels_3D_12;
+		// 提前分配空间
+		feature_pixels_3D_12.resize(static_cast<int>(countmax));
+		for (auto& row : feature_pixels_3D_12) {
+			row.resize(static_cast<int>(12));
+		}
+
 		// motion_vec 存储每一帧的运动情况
 		std::vector<std::vector<std::string>> motion_vec;
 		// 提前分配空间
@@ -271,6 +249,7 @@ int main()
 		}
 
 		utility.GetFeaturePointsPixels(feature_rgb_path, feature_pixels_position, '\t');
+		utility.GetFeaturePointsPixels_givenseries(feature_rgb_path, feature_pixels_position_12, feature_id_series_12, '\t');
 
 		// 计算像素到对应空间点坐标映射关系
 		cv::Mat homogeneous_coords_all(3, IMAGE_HEIGHT_480 * IMAGE_WIDTH_640, CV_32F);
@@ -546,7 +525,7 @@ int main()
 						std::cout << depth_inrgb.at<float>(y, x) << '\n';
 						point_x = 0.0f;
 						point_y = 0.0f;
-						point_z = 0.0f;	
+						point_z = -1.0f;	
 						is_empty = true;
 					}
 
@@ -570,26 +549,97 @@ int main()
 				}
 
 			}
-			cv::imshow("Camera Feed", rgb);
-			//std::cout << camera_model.RGBRotationMat << "\n";
-			cv::Mat motion = utility.PositionToMotion((position[1] + position[2]) / 2, (position[3] + position[4]) / 2, position[5], position[0]);
+
+
 			
-			
-			
-			for (int motion_id = 0; motion_id < 6; motion_id++)
+			// ----------------------------------- 保存孙喆提出要求的12个特征点 ----------------------------------- 
+			for (int feature_id = 0; feature_id < 12; feature_id++)
 			{
-				if (!is_empty)
-				{
-					motion_vec[i][motion_id] = std::to_string( motion.at<float>(motion_id, 0));
-					utility.DrawCoord(rgb, camera_model.RGBCameraMatrix, (position[1] + position[2]) / 2, (position[3] + position[4]) / 2, position[5], position[0]);
+				std::string value = feature_pixels_position_12[feature_id][i];
+				std::smatch matches;
+				int x, y;
+				if (std::regex_search(value, matches, pattern)) {
+					// 第一个匹配项是整个字符串，后面的是括号内的两个数字
+					x = std::stoi(matches[1].str());
+					y = std::stoi(matches[2].str());
 				}
-				else
-				{
-					motion_vec[i][motion_id] = "";
+				else {
+					std::cerr << "No match found" << std::endl;
 				}
-				
+
+				// 访问 reshape 后的图像中特定位置的像素值
+				float point_x = points_rgbcoord.at<cv::Vec3f>(y, x)[0];
+				float point_y = points_rgbcoord.at<cv::Vec3f>(y, x)[1];
+				float point_z = points_rgbcoord.at<cv::Vec3f>(y, x)[2];
+
+				if (std::abs(point_z - nodepth_point_inrgb.at<float>(2, 0)) < 1e-4)
+				{
+					std::cout << x << " " << y << '\n';
+					std::cout << depth_inrgb.at<float>(y, x) << '\n';
+					point_x = 0.0f;
+					point_y = 0.0f;
+					point_z = -1.0f;
+					is_empty = true;
+				}
+
+
+				std::stringstream ss; // 创建一个字符串流对象
+				ss << std::fixed << std::setprecision(4); // 设置小数点精度为4位
+				ss << "(" << point_x << "," << point_y << "," << point_z << ")"; // 将浮点数写入字符串流中
+				std::string result = ss.str(); // 从字符串流中获取组合后的字符串
+				feature_pixels_3D_12[i][feature_id] = result;
+
 			}
-			cv::imshow("Camera Feed", rgb); ////
+			// ----------------------------------- end -----------------------------------
+			std::cout << 1111 << '\n';
+			// ----------------------------------- 新的位姿计算 -----------------------------------  
+			cv::Mat motion(6, 1, CV_32F);
+			if (is_empty) // 如果存在异常数据，直接全部赋值为-1
+			{
+				motion.at<float>(0, 0) = -1.0f;
+				motion.at<float>(1, 0) = -1.0f;
+				motion.at<float>(2, 0) = -1.0f;
+				motion.at<float>(3, 0) = -1.0f;
+				motion.at<float>(4, 0) = -1.0f;
+				motion.at<float>(5, 0) = -1.0f;
+
+			}
+			else // 正常处理
+			{
+				cv::Mat p1 = (position[1] + position[2]) / 2;
+				cv::Mat p2 = (position[3] + position[4]) / 2;
+				cv::Mat p3 = position[5];
+				cv::Mat p4 = position[0];
+
+				cv::Mat motion = utility.PositionToMotion(p1, p2, p3, p4);
+				utility.DrawCoord(rgb, camera_model.RGBCameraMatrix, p1, p2, p3, p4);
+				for (int motion_id = 0; motion_id < 6; motion_id++)
+				{
+					motion_vec[i][motion_id] = std::to_string(motion.at<float>(motion_id, 0));
+				}
+
+			}
+			cv::imshow("Camera Feed", rgb);
+			// ----------------------------------- end -----------------------------------
+
+			////cv::imshow("Camera Feed", rgb);
+			////std::cout << camera_model.RGBRotationMat << "\n";
+			//cv::Mat motion = utility.PositionToMotion((position[1] + position[2]) / 2, (position[3] + position[4]) / 2, position[5], position[0]);
+			//
+			//for (int motion_id = 0; motion_id < 6; motion_id++)
+			//{
+			//	if (!is_empty)
+			//	{
+			//		motion_vec[i][motion_id] = std::to_string( motion.at<float>(motion_id, 0));
+			//		utility.DrawCoord(rgb, camera_model.RGBCameraMatrix, (position[1] + position[2]) / 2, (position[3] + position[4]) / 2, position[5], position[0]);
+			//	}
+			//	else
+			//	{
+			//		motion_vec[i][motion_id] = "";
+			//	}
+			//	
+			//}
+			//cv::imshow("Camera Feed", rgb); ////
 
 			end_time = std::chrono::high_resolution_clock::now();
 			duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
@@ -622,6 +672,8 @@ int main()
 		//std::string motion_vec_path = "D:/aaaLab/aaagraduate/SaveVideo/source/motion.txt";
 		utility.saveToTxt(motion_vec, motion_vec_path, '\t');
 		//utility.saveToTxt<float>(motion_vec, motion_vec_path, '\t');
+		//std::string feature_3D_path = "D:/aaaLab/aaagraduate/SaveVideo/source/points.txt";
+		utility.saveToTxt(feature_pixels_3D_12, feature_3D_path_12, '\t');
 
 	}
 	catch (cv::Exception& e)

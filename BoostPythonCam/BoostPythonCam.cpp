@@ -386,7 +386,7 @@ PyObject* RGBDCamera::get_mat(const std::string& mat_name)
 }
 
 //PyObject* RGBDCamera::get_feature_points_3D(const std::vector<uint16_t>& feature_x, const std::vector<uint16_t>& feature_y)
-PyObject* RGBDCamera::get_feature_points_3D(const boost::python::list& feature_x, const boost::python::list& feature_y)
+PyObject* RGBDCamera::get_feature_points_3D_6(const boost::python::list& feature_x, const boost::python::list& feature_y, bool draw)
 {
 	int f_num = boost::python::len(feature_x);
 	//int f_num = feature_x.size();
@@ -426,14 +426,62 @@ PyObject* RGBDCamera::get_feature_points_3D(const boost::python::list& feature_x
 		}
 
 		// 对m_rgb_drawn绘制特征点位置
-		cv::Point feature(x_i, y_i);
-		cv::circle(m_rgb_drawn, feature, 3, cv::Scalar(0, 0, 255), -1); // 红色点，半径为3
+		if (draw)
+		{
+			cv::Point feature(x_i, y_i);
+			cv::circle(m_rgb_drawn, feature, 3, cv::Scalar(0, 0, 255), -1); // 红色点，半径为3
+		}
 	}
 
 	
 	PyObject* ret = m_cvt.toNDArray(m_feature_points_now.clone());
 	return ret;
 
+}
+
+PyObject* RGBDCamera::get_feature_points_3D(const boost::python::list& feature_x, const boost::python::list& feature_y, bool draw)
+{
+	int f_num = boost::python::len(feature_x);
+	cv::Mat feature_points_now(3, f_num, CV_32F);
+
+	m_rgb_drawn = m_rgb.clone();
+
+	for (int i = 0; i < f_num; i++)
+	{
+		//m_feature_points_now.at<float>(0, i) = m_points_rgbcoord.at<cv::Vec3f>(feature_y[i], feature_x[i])[0];
+		//m_feature_points_now.at<float>(1, i) = m_points_rgbcoord.at<cv::Vec3f>(feature_y[i], feature_x[i])[1];
+		//m_feature_points_now.at<float>(2, i) = m_points_rgbcoord.at<cv::Vec3f>(feature_y[i], feature_x[i])[2];
+
+		int x_i = boost::python::extract<int>(feature_x[i]);
+		int y_i = boost::python::extract<int>(feature_y[i]);
+
+		feature_points_now.at<float>(0, i) = m_points_rgbcoord.at<cv::Vec3f>(y_i, x_i)[0];
+		feature_points_now.at<float>(1, i) = m_points_rgbcoord.at<cv::Vec3f>(y_i, x_i)[1];
+		feature_points_now.at<float>(2, i) = m_points_rgbcoord.at<cv::Vec3f>(y_i, x_i)[2];
+
+
+		// 判断是不是转换前深度为0的点，如果是，则xyz均记为0，方便后续处理
+		if (std::abs(feature_points_now.at<float>(2, i) - m_nodepth_point_inrgb.at<float>(2, 0)) < 1e-4)
+		{
+			//std::cout << x << " " << y << '\n';
+			//std::cout << depth_inrgb.at<float>(y, x) << '\n';
+			feature_points_now.at<float>(0, i) = 0.0f;
+			feature_points_now.at<float>(1, i) = 0.0f;
+			feature_points_now.at<float>(2, i) = -1.0f;
+		}
+
+		// 对m_rgb_drawn绘制特征点位置
+		
+		if (draw)
+		{
+			cv::Point feature(x_i, y_i);
+			cv::circle(m_rgb_drawn, feature, 3, cv::Scalar(0, 0, 255), -1); // 红色点，半径为3
+		}	
+	}
+
+
+	PyObject* ret = m_cvt.toNDArray(feature_points_now.clone());
+	return ret;
 }
 
 PyObject* RGBDCamera::get_pose_6p()
@@ -457,8 +505,8 @@ PyObject* RGBDCamera::get_pose_6p()
 	}
 
 	// 正常处理
-	cv::Mat p1 = (m_feature_points_now.col(1) + m_feature_points_now.col(2));
-	cv::Mat p2 = (m_feature_points_now.col(3) + m_feature_points_now.col(4));
+	cv::Mat p1 = (m_feature_points_now.col(1) + m_feature_points_now.col(2)) / 2;
+	cv::Mat p2 = (m_feature_points_now.col(3) + m_feature_points_now.col(4)) / 2;
 	cv::Mat p3 = m_feature_points_now.col(5);
 	cv::Mat p4 = m_feature_points_now.col(0);
 			
@@ -490,6 +538,7 @@ BOOST_PYTHON_MODULE(BoostPythonCam) {
 		.def("registration_capturedimg", &RGBDCamera::registration_capturedimg)
 		.def("registration_existingimg", &RGBDCamera::registration_existingimg)
 		.def("get_mat", &RGBDCamera::get_mat)
+		.def("get_feature_points_3D_6", &RGBDCamera::get_feature_points_3D_6)
 		.def("get_feature_points_3D", &RGBDCamera::get_feature_points_3D)
 		.def("get_pose_6p", &RGBDCamera::get_pose_6p);
 

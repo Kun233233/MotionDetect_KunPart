@@ -100,15 +100,19 @@ if __name__ == '__main__':
     #                                           pixels_position[:,40-1,:], pixels_position[:,43-1,:], 
     #                                           pixels_position[:,46-1,:], pixels_position[:,52-1,:]), 
     #                                           axis=1)
-    feature_pixels_position = pixels_position[:, [31-1, 37-1, 40-1, 43-1, 46-1, 52-1], :]
+    # feature_pixels_position = pixels_position[:, [31-1, 37-1, 40-1, 43-1, 46-1, 52-1], :]
+    # feature_pixels_position = pixels_position[:, [31, 37, 40, 43, 46, 52], :]
+
+    feature_pixels_position = pixels_position[:, [22-1, 23-1, 30-1, 34-1, 37-1, 40-1, 43-1, 46-1, 49-1, 52-1, 55-1, 58-1], :]
     
-    print(pixels_position.shape)
-    print(feature_pixels_position.shape)
+    # print(pixels_position.shape)
+    # print(feature_pixels_position.shape)
 
 
     frame_path = rgb_folder_path + "/frame_num.txt"
     countmax = GetCountMax(frame_path) # 读取保存图片的数目，即帧数
     imgs_index = GetImgsIndex(countmax) # 生成对应帧的图片序列名
+    # countmax = 3
 
     count = 0 # 记录循环轮次
     feature_points = [] # 记录每一次循环特征点对应三维空间坐标
@@ -133,12 +137,22 @@ if __name__ == '__main__':
         # start_time = time.time()
 
         if feature_pixels_position[i, 0, 0] != -1:
+            # print(feature_pixels_position[i, :, 0])
+            # print(rgb_file_name)
+            # feature_points_now = cam_tool.get_feature_points_3D(feature_pixels_position[i, :, 0].tolist(), 
+            #                                                     feature_pixels_position[i, :, 1].tolist())
             feature_points_now = cam_tool.get_feature_points_3D(feature_pixels_position[i, :, 0].tolist(), 
-                                                                feature_pixels_position[i, :, 1].tolist())
-            pose_now = cam_tool.get_pose_6p()
+                                                                feature_pixels_position[i, :, 1].tolist(), True)
+            print(feature_points_now.shape)
+            # print(type(feature_points_now))
+            # pose_now = cam_tool.get_pose_6p()
 
             feature_points.append(feature_points_now)
-            pose.append(pose_now)
+            # pose.append(pose_now)
+        else:
+            feature_points_now = np.zeros((3, 12))
+            feature_points_now[-1] = -1
+            feature_points.append(feature_points_now)
 
         # end_time = time.time()
         # execution_time = end_time - start_time
@@ -146,12 +160,13 @@ if __name__ == '__main__':
 
         # rgb = cam_tool.get_mat("rgb")
         # cv.imshow("rgb", rgb)
+        
 
         depth_inrgb_CV8U = cam_tool.get_mat("depth_inrgb_CV8U")
         rgb_depth = cam_tool.get_mat("rgb_depth")
         rgb_drawn = cam_tool.get_mat("rgb_drawn")
         # depth_inrgb_CV8U = cam_tool.get_mat("depth_inrgb_CV8U")
-
+        print(type(rgb_depth))
         cv.imshow("depth_inrgb_CV8U", depth_inrgb_CV8U)
         cv.imshow("rgb_depth", rgb_depth)
         cv.imshow("rgb_drawn", rgb_drawn)
@@ -161,4 +176,29 @@ if __name__ == '__main__':
 
         end_time = time.time()
         execution_time = end_time - start_time
-        print("Execution time:", execution_time, "seconds")
+        # print("Execution time:", execution_time, "seconds")
+
+
+    # 结束后保存数据
+    save_feature_points_path = "D:/aaaLab/aaagraduate/SaveVideo/scripts/total/ttt.txt"
+    with open(save_feature_points_path, 'w') as f:
+        for data in feature_points:
+            # 四舍五入保留四位小数
+            rounded_data = np.round(data, 4)
+            cur_row = ''
+            for i in range(6):
+                x = rounded_data[0, i]
+                y = rounded_data[1, i]
+                z = rounded_data[2, i]
+                s = '({:.4f}, {:.4f}, {:.4f})'.format(x, y, z)
+                cur_row = cur_row + s + '\t'
+            print(cur_row)
+
+
+            # 格式化为字符串
+            # formatted_data = ['({:.4f}, {:.4f}, {:.4f})'.format(x, y, z) for x, y, z in rounded_data]
+            # print(formatted_data)
+            # 将结果写入文件
+            # f.write(' '.join(formatted_data) + '\n')
+            f.write(''.join(cur_row) + '\n')
+

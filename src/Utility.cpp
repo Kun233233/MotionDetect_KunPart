@@ -271,3 +271,49 @@ void Utility::GetFeaturePointsPixels(const std::string& feature_rgb_path, std::v
 
 }
 
+
+
+
+void Utility::GetFeaturePointsPixels_givenseries(const std::string& feature_rgb_path, std::vector<std::vector<std::string>>& feature_pixels_position, const std::vector<int>& id_series, char delimiter)
+{
+	std::ifstream file(feature_rgb_path);
+
+	// 检查文件是否成功打开
+	if (!file.is_open()) {
+		std::cerr << "Error opening file" << std::endl;
+		//return 1;
+		exit(1);
+	}
+
+
+	std::string line;
+	// 逐行读取文件内容
+	for (int currentRow = 0; std::getline(file, line); ++currentRow) {
+		// 使用字符串流解析每一行的数据
+		std::istringstream iss(line);
+		std::string value;
+		std::vector<std::string> values;
+		//std::vector<std::vector<std::string>> feature_pixels_position;
+		if (currentRow == 0) { continue; }
+
+		int currentColumn = 0;
+		int nextFeature = 0;
+		// 使用字段分隔符拆分每一行的数据
+		while (std::getline(iss, value, delimiter)) {
+			++currentColumn;
+
+			// 如果当前列是目标列，则添加到 vector 中
+			if (currentColumn == id_series[nextFeature] + 1) {
+				//std::cout << currentRow - 1 << " " << currentColumn << " " << value << "\n";
+				feature_pixels_position[nextFeature][currentRow - 1] = value;
+				nextFeature++;
+			}
+		}
+
+
+	}
+	return;
+
+}
+
+

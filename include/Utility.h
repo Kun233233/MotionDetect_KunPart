@@ -58,6 +58,7 @@ public:
 
 	// »ñµÃ
 	void GetFeaturePointsPixels(const std::string& feature_rgb_path, std::vector<std::vector<std::string>>& feature_pixels_position, char delimiter);
+	void GetFeaturePointsPixels_givenseries(const std::string& feature_rgb_path, std::vector<std::vector<std::string>>& feature_pixels_position, const std::vector<int>& id_series, char delimiter);
 
 };
 
