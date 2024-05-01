@@ -204,6 +204,21 @@ void RGBDCamera::get_img_from_cam()
 {
 	if (!m_has_device) { std::cout << "No device was acquired!\n"; return;} // 先判断有没有设备
 
+
+	// 读取RGB帧
+	cv::Mat frame;
+	m_imgCap >> frame;
+
+	// 检查RGB帧是否成功读取
+	if (frame.empty()) {
+		std::cerr << "Error: Failed to capture RGB frame.\n";
+		return;
+	}
+
+	//m_rgb = frame.clone();
+
+
+
 	// 读取数据流
 	m_rc = m_streamDepth.readFrame(&m_frameDepth);
 	//cv::Mat mImageDepth, hImageDepth;
@@ -222,16 +237,17 @@ void RGBDCamera::get_img_from_cam()
 	}
 
 
-	// 读取RGB帧
-	cv::Mat frame;
-	m_imgCap >> frame;
+	//// 读取RGB帧
+	//cv::Mat frame;
+	//m_imgCap >> frame;
 
-	// 检查RGB帧是否成功读取
-	if (frame.empty()) {
-		std::cerr << "Error: Failed to capture RGB frame.\n";
-		return;
-	}
+	//// 检查RGB帧是否成功读取
+	//if (frame.empty()) {
+	//	std::cerr << "Error: Failed to capture RGB frame.\n";
+	//	return;
+	//}
 
+	//m_rgb = frame.clone();
 	m_rgb = frame.clone();
 
 
@@ -484,7 +500,7 @@ PyObject* RGBDCamera::get_feature_points_3D(const boost::python::list& feature_x
 	return ret;
 }
 
-PyObject* RGBDCamera::get_pose_6p()
+PyObject* RGBDCamera::get_pose_6p(bool draw)
 {
 	// 如果存在异常数据，直接全部赋值为-1，返回
 	for (int i = 0; i < 6; i++)
@@ -512,7 +528,9 @@ PyObject* RGBDCamera::get_pose_6p()
 			
 	cv::Mat motion = utility.PositionToMotion(p1, p2, p3, p4);
 	m_motion_now = motion;
-	utility.DrawCoord(m_rgb_drawn, camera_model.RGBCameraMatrix, p1, p2, p3, p4);	
+	if (draw) {
+		utility.DrawCoord(m_rgb_drawn, camera_model.RGBCameraMatrix, p1, p2, p3, p4);
+	}	
 
 	PyObject* ret = m_cvt.toNDArray(m_motion_now.clone());
 	return ret;

@@ -161,8 +161,13 @@ int main()
 		//std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/RGBImgs";
 		//std::string  depth_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240314/DepthImgs";
 		//std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240314/RGBImgs";
-		std::string  depth_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/DepthImgs3";
-		std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/RGBImgs3";
+		//std::string  depth_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/DepthImgs3";
+		//std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/RGBImgs3";
+
+		//std::string  depth_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240429/DepthImgs1";
+		//std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240429/RGBImgs1";
+		std::string  depth_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240429/DepthImgs8";
+		std::string  rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240429/RGBImgs8";
 
 
 		Status rc = STATUS_OK;
@@ -520,7 +525,7 @@ int main()
 			depth_file_name_stream << depth_folder_path << "/depth_" << std::setfill('0') << std::setw(6) << count << ".png";
 			std::string depth_file_name = depth_file_name_stream.str();
 			//std::string depth_file_name = depth_folder_path + "/depth_" + std::to_string(count) + ".png";
-			//cv::imwrite(depth_file_name, hImageDepth, { cv::IMWRITE_PNG_COMPRESSION, 0 }); // 0代表无压缩
+			cv::imwrite(depth_file_name, hImageDepth, { cv::IMWRITE_PNG_COMPRESSION, 0 }); // 0代表无压缩
 			cv::imshow("hImageDepth", hImageDepth);
 
 			//// 读取保存的图像并检查通道数
@@ -533,7 +538,7 @@ int main()
 			rgb_file_name_stream << rgb_folder_path << "/rgb_" << std::setfill('0') << std::setw(6) << count << ".png";
 			std::string rgb_file_name = rgb_file_name_stream.str();
 			//std::string rgb_file_name = rgb_folder_path + "/rgb_" + std::to_string(count) + ".png";
-			//cv::imwrite(rgb_file_name, frame);
+			cv::imwrite(rgb_file_name, frame);
 
 			count++;
 

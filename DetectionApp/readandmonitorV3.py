@@ -1,9 +1,8 @@
-
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import signal
 
 def process(file_path):
-    import numpy as np
-    import matplotlib.pyplot as plt
-    from scipy import signal
     data_points = []
 
     with open(file_path, "r") as file:
@@ -132,5 +131,5 @@ def process(file_path):
     plt.xlabel('Frame')
     plt.ylabel('Amplitude')
     plt.title('Synthetic Motion')
-    #plt.show()
-    return plt.figure('合成角位移及平动位移'), plt.figure('合成总位移'), amplitude
+    plt.show()
+    # return plt.figure('合成角位移及平动位移'), plt.figure('合成总位移'), amplitude

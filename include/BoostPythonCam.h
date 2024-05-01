@@ -54,7 +54,7 @@ public:
 	PyObject* get_feature_points_3D(const boost::python::list& feature_x, const boost::python::list& feature_y, bool draw);
 
 
-	PyObject* get_pose_6p();
+	PyObject* get_pose_6p(bool draw);
 
 
 protected:
