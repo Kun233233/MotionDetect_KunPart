@@ -153,6 +153,8 @@ void cap_rgb(cv::VideoCapture& imgCap, cv::Mat& frame)
 int main()
 {
 	try {
+		// 存储测试时间
+		std::vector<double> time_vec;
 
 		std::string  depth_video_path = "D:/aaaLab/aaagraduate/SaveVideo/DepthSavePoll/depth_0.avi";
 		std::string  rgb_video_path = "D:/aaaLab/aaagraduate/SaveVideo/DepthSavePoll/rgb_0.avi";
@@ -345,7 +347,7 @@ int main()
 
 		while (true)
 		{
-			//auto start_time = std::chrono::high_resolution_clock::now();
+			auto start_time = std::chrono::high_resolution_clock::now();
 
 			//cv::Mat frame(480, 640, CV_8UC3);
 			//std::thread t2(cap_rgb, imgCap, frame);
@@ -365,7 +367,7 @@ int main()
 				cv::Mat depthtemp(frameDepth.getHeight(), frameDepth.getWidth(), CV_16UC1, (void*)frameDepth.getData()); //CV_16UC1
 				mImageDepth = depthtemp;
 				// 为了让深度图像显示的更加明显一些，将CV_16UC1 ==> CV_8U格式
-				//Mat mScaledDepth, hScaledDepth;
+				Mat mScaledDepth, hScaledDepth;
 
 				mImageDepth.convertTo(mScaledDepth, CV_8U, 255.0 / iMaxDepth);
 
@@ -452,13 +454,22 @@ int main()
 			//t2.join();
 
 
-			//auto end_time = std::chrono::high_resolution_clock::now();
+			auto end_time = std::chrono::high_resolution_clock::now();
 			//auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
 			//std::cout << "duration: " << duration.count() << '\n';
 			//totaltime += duration.count();
+			
+			//auto end_time = std::chrono::high_resolution_clock::now();
+			////auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+			//// 计算运行时间（纳秒级别）
+			//auto duration_nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time);
+			//// 将纳秒转换为毫秒（浮点数）
+			//double duration_milliseconds = duration_nanoseconds.count() / 1000000.0;
+			//std::cout << "duration: " << duration_milliseconds << '\n';
+			//time_vec.push_back(duration_milliseconds);
 
 
-
+			// ------ begin ------
 
 			// 将深度图归一化到0-255范围，以便与 RGB 图像叠加
 			cv::Mat depthImageNormalized;
@@ -523,9 +534,9 @@ int main()
 			// 保存深度图像，格式位depth_(count).png
 			std::ostringstream depth_file_name_stream;
 			depth_file_name_stream << depth_folder_path << "/depth_" << std::setfill('0') << std::setw(6) << count << ".png";
-			std::string depth_file_name = depth_file_name_stream.str();
-			//std::string depth_file_name = depth_folder_path + "/depth_" + std::to_string(count) + ".png";
-			cv::imwrite(depth_file_name, hImageDepth, { cv::IMWRITE_PNG_COMPRESSION, 0 }); // 0代表无压缩
+			//std::string depth_file_name = depth_file_name_stream.str();
+			////std::string depth_file_name = depth_folder_path + "/depth_" + std::to_string(count) + ".png";
+			//cv::imwrite(depth_file_name, hImageDepth, { cv::IMWRITE_PNG_COMPRESSION, 0 }); // 0代表无压缩
 			cv::imshow("hImageDepth", hImageDepth);
 
 			//// 读取保存的图像并检查通道数
@@ -535,10 +546,12 @@ int main()
 
 			// 保存rgb图像，格式位rgb_(count).png
 			std::ostringstream rgb_file_name_stream;
-			rgb_file_name_stream << rgb_folder_path << "/rgb_" << std::setfill('0') << std::setw(6) << count << ".png";
-			std::string rgb_file_name = rgb_file_name_stream.str();
-			//std::string rgb_file_name = rgb_folder_path + "/rgb_" + std::to_string(count) + ".png";
-			cv::imwrite(rgb_file_name, frame);
+			//rgb_file_name_stream << rgb_folder_path << "/rgb_" << std::setfill('0') << std::setw(6) << count << ".png";
+			//std::string rgb_file_name = rgb_file_name_stream.str();
+			////std::string rgb_file_name = rgb_folder_path + "/rgb_" + std::to_string(count) + ".png";
+			//cv::imwrite(rgb_file_name, frame);
+
+			// ------end ------
 
 			count++;
 
@@ -557,10 +570,22 @@ int main()
 			if (waitKey(1) == 27)
 				break;
 
-			if (count == 2000)
+			if (count == 1500)
 			{
 				break;
-			}
+			}			
+			
+			//std::string root = "D:/aaaLab/aaagraduate/SaveVideo/source/time/";
+			////std::string time_filename = root + "registration_existingimg_time_C.txt";
+			////std::string time_filename = root + "get_feature_points_3D_time_C.txt";
+			////std::string time_filename = root + "get_pose_6p_time_C.txt";
+			//std::string time_filename = root + "read_img_time_C.txt";
+			//std::ofstream time_file(time_filename);
+			//for (double num : time_vec) {
+			//	time_file << num << '\n';
+			//}
+			//// 关闭文件
+			//time_file.close();
 		}
 		std::cout << "avg time: " << float(totaltime) / float(count) << '\n';
 

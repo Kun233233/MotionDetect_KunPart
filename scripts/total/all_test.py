@@ -77,6 +77,8 @@ def GetImgsIndex(countmax):
 
 if __name__ == '__main__':
 
+    time_use = []
+
     # # ------------------- 20240326 1 ------------------- 
     depth_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/DepthImgs1"
     rgb_folder_path = "D:/aaaLab/aaagraduate/SaveVideo/source/20240326/RGBImgs1"
@@ -104,7 +106,9 @@ if __name__ == '__main__':
     # feature_pixels_position = pixels_position[:, [31, 37, 40, 43, 46, 52], :]
 
     feature_pixels_position = pixels_position[:, [22-1, 23-1, 30-1, 34-1, 37-1, 40-1, 43-1, 46-1, 49-1, 52-1, 55-1, 58-1], :]
+    feature_pixels_position_6 = pixels_position[:, [31-1, 37-1, 40-1, 43-1, 46-1, 52-1], :]
     
+
     # print(pixels_position.shape)
     # print(feature_pixels_position.shape)
 
@@ -122,11 +126,18 @@ if __name__ == '__main__':
     cam_tool = BoostPythonCam.RGBDCamera(camera_param_file_path, False, 0)
 
     for i in range(countmax):
-        start_time = time.time()
+        
+        start_time = time.time_ns()
         rgb_file_name = rgb_folder_path + "/rgb_" + imgs_index[i] + ".png"
         depth_file_name = depth_folder_path + "/depth_" + imgs_index[i] + ".png"
 
+        # start_time = time.time()
         cam_tool.registration_existingimg(rgb_file_name, depth_file_name)
+
+        # end_time = time.time()
+        # execution_time = end_time - start_time
+        # # print("Execution time:", execution_time*1000, " ms")
+        # time_use.append(execution_time*1000)
 
         # end_time = time.time()
         # execution_time = end_time - start_time
@@ -140,10 +151,22 @@ if __name__ == '__main__':
             # print(feature_pixels_position[i, :, 0])
             # print(rgb_file_name)
             # feature_points_now = cam_tool.get_feature_points_3D(feature_pixels_position[i, :, 0].tolist(), 
-            #                                                     feature_pixels_position[i, :, 1].tolist())
+            #                                                     feature_pixels_position[i, :, 1].tolist())            
+            feature_points_6_now = cam_tool.get_feature_points_3D_6(feature_pixels_position_6[i, :, 0].tolist(), 
+                                                                feature_pixels_position_6[i, :, 1].tolist(), False)
+           
             feature_points_now = cam_tool.get_feature_points_3D(feature_pixels_position[i, :, 0].tolist(), 
                                                                 feature_pixels_position[i, :, 1].tolist(), True)
-            print(feature_points_now.shape)
+            # start_time = time.time_ns()
+            cam_tool.get_pose_6p(True)
+            # end_time = time.time_ns()
+            # duration_nanoseconds = end_time - start_time
+            # # 将纳秒转换为毫秒（浮点数）
+            # duration_milliseconds = duration_nanoseconds / float(1e6)
+            # # print("Execution time:", duration_milliseconds, " ms")
+            # time_use.append(duration_milliseconds)
+
+            # print(feature_points_now.shape)
             # print(type(feature_points_now))
             # pose_now = cam_tool.get_pose_6p()
 
@@ -166,7 +189,7 @@ if __name__ == '__main__':
         rgb_depth = cam_tool.get_mat("rgb_depth")
         rgb_drawn = cam_tool.get_mat("rgb_drawn")
         # depth_inrgb_CV8U = cam_tool.get_mat("depth_inrgb_CV8U")
-        print(type(rgb_depth))
+        # print(type(rgb_depth))
         cv.imshow("depth_inrgb_CV8U", depth_inrgb_CV8U)
         cv.imshow("rgb_depth", rgb_depth)
         cv.imshow("rgb_drawn", rgb_drawn)
@@ -174,9 +197,16 @@ if __name__ == '__main__':
         i += 1
         cv.waitKey(1)
 
-        end_time = time.time()
-        execution_time = end_time - start_time
-        # print("Execution time:", execution_time, "seconds")
+        # end_time = time.time()
+        # execution_time = end_time - start_time
+        # # print("Execution time:", execution_time, "seconds")
+
+        end_time = time.time_ns()
+        duration_nanoseconds = end_time - start_time
+        # 将纳秒转换为毫秒（浮点数）
+        duration_milliseconds = duration_nanoseconds / float(1e6)
+        # print("Execution time:", duration_milliseconds, " ms")
+        time_use.append(duration_milliseconds)
 
 
     # 结束后保存数据
@@ -201,4 +231,18 @@ if __name__ == '__main__':
             # 将结果写入文件
             # f.write(' '.join(formatted_data) + '\n')
             f.write(''.join(cur_row) + '\n')
+
+
+    # 保存时间
+    # 文件名
+    root = "D:/aaaLab/aaagraduate/SaveVideo/source/time/"
+    # filename = root + "registration_existingimg_time_Py.txt"
+    # filename = root + "get_feature_points_3D_time_Py.txt"
+    # filename = root + "get_pose_6p_time_Py.txt"
+    filename = root + "read_mode_time_Py.txt"
+
+    # 将数字写入文件
+    with open(filename, 'w') as file:
+        for number in time_use:
+            file.write(str(number) + "\n")
 

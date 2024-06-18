@@ -11,9 +11,10 @@ import dlib
 
 
 import sys
-import time
 sys.path.append("D:/conda_envs/main-py38/Lib/site-packages/boost_python_cam")
 import BoostPythonCam
+
+import time
 # from scripts.total.all_test import GetCountMax, GetImgsIndex, GetPixels
 from utils import extract_feature_point, GetCountMax, GetImgsIndex, GetPixels, save_points, process, save_pixels
 
@@ -76,7 +77,7 @@ class Capture:
         self.ui.OffButton.clicked.connect(self.close_camera) # 关闭摄像头
         self.ui.depth_select.clicked.connect(self.get_depth_path)
         self.ui.RGB_select.clicked.connect(self.get_RGB_path)
-        self.ui.xyz_select.clicked.connect(self.get_xyz_path)
+        # self.ui.xyz_select.clicked.connect(self.get_xyz_path)
         self.ui.result_select.clicked.connect(self.get_result_path)
         self.camera_timer.timeout.connect(self.show_image)
     

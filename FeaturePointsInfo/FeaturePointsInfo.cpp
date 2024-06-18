@@ -248,6 +248,9 @@ int main()
 			row.resize(static_cast<int>(6));
 		}
 
+		// 存储测试时间
+		std::vector<double> time_vec;
+
 		utility.GetFeaturePointsPixels(feature_rgb_path, feature_pixels_position, '\t');
 		utility.GetFeaturePointsPixels_givenseries(feature_rgb_path, feature_pixels_position_12, feature_id_series_12, '\t');
 
@@ -299,9 +302,20 @@ int main()
 		double fps = 30.0;
 		int wait_time = static_cast<int>(1 / fps * 1000.0);
 
+		// 测试时间专用
+		//cv::Mat m_rgb;
+		//cv::Mat m_depth;
+		//cv::Mat m_points_inrgb;
+		//cv::Mat m_depth_inrgb;
+		//cv::Mat m_points_rgbcoord;
+		//cv::Mat m_depth_inrgb_CV8U;
+		//cv::Mat m_depth_inrgb_color;
+		//cv::Mat m_rgb_depth;
+
 
 		for (int i = 0; i < countmax; i++)
 		{
+			// ---------- read_mode ---------- 
 			auto start_time = std::chrono::high_resolution_clock::now();
 
 			//std::string rgb_file_name = rgb_folder_path + "/rgb_" + std::to_string(i) + ".png"; 
@@ -309,6 +323,9 @@ int main()
 			std::string rgb_file_name = rgb_folder_path + "/rgb_" + file_index[i] + ".png";
 			std::string depth_file_name = depth_folder_path + "/depth_" + file_index[i] + ".png";
 			//std::cout << rgb_file_name << "\n";
+			
+			// ---------- registration_existingimg ----------
+			//auto start_time = std::chrono::high_resolution_clock::now();
 			cv::Mat rgb = cv::imread(rgb_file_name);
 			cv::Mat depth = cv::imread(depth_file_name, cv::IMREAD_UNCHANGED);
 			//if (!depth.empty()) {
@@ -325,15 +342,16 @@ int main()
 			//cv::Mat rgb_undistorted;
 			//cv::undistort(rgb, rgb_undistorted, camera_model.RGBCameraMatrix, camera_model.RGBDistCoeffs);
 			//cv::imshow("rgb_undistorted", rgb_undistorted);
-			auto end_time = std::chrono::high_resolution_clock::now();
-			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-			std::cout << "duration: " << duration.count() << '\n';
+			//auto end_time = std::chrono::high_resolution_clock::now();
+			//auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+			//std::cout << "duration: " << duration.count() << '\n';
+			cv::imshow("n", rgb);
 
 			// 获得深度图每个像素点对应的3D空间坐标 (x, y, z)
 			cv::Mat points = camera_model.Get3DPoints(depth, pixels_to_points);
 			//cv::Mat points_x = points.row(0).reshape(1, 480);
 			//cv::Mat points_y = points.row(1).reshape(1, 480);
-			cv::Mat points_z = points.row(2).reshape(1, 480);
+			//cv::Mat points_z = points.row(2).reshape(1, 480);
 			//cv::Mat n;
 			//cv::normalize(points_x, n, 0, 1, cv::NORM_MINMAX);
 			//cv::imshow("n", n);
@@ -377,7 +395,7 @@ int main()
 			// 转换至rgb坐标系下，方便构建点云
 			cv::Mat points_rgbcoord = camera_model.PixelsCoordTransfer(points_inrgb);
 
-			cv::medianBlur(points_rgbcoord, points_rgbcoord, 5); // =============
+			//cv::medianBlur(points_rgbcoord, points_rgbcoord, 5); // =============
 
 			//// 分离通道
 			//std::vector<cv::Mat> channels;
@@ -459,6 +477,26 @@ int main()
 			cv::addWeighted(depth_inrgb_color, depthweight, rgb, (1 - depthweight), 0.0, rgb_depth);
 			cv::imshow("Mixed", rgb_depth); ////
 
+
+
+			// 保存到结构体，便于python接口提取 测试时间专用
+			//m_rgb = rgb.clone();
+			//m_depth = depth.clone();
+			//m_points_inrgb = points_inrgb.clone();
+			//m_depth_inrgb = depth_inrgb.clone();
+			//m_points_rgbcoord = points_rgbcoord.clone();
+			//m_depth_inrgb_CV8U = depth_inrgb_CV8U.clone();
+			//m_depth_inrgb_color = depth_inrgb_color.clone();
+			//m_rgb_depth = rgb_depth.clone();
+
+			//auto end_time = std::chrono::high_resolution_clock::now();
+			//auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+			////std::cout << "duration: " << duration.count() << '\n';
+			//time_vec.push_back(duration.count());
+			// ---------- registration_existingimg ---------- 
+
+
+
 			// 显示帧
 			//cv::imshow("Camera Feed", frame);
 			//cv::imshow("Camera Feed", rgb);
@@ -489,7 +527,7 @@ int main()
 					//std::cout << "Second Number: " << y << std::endl;
 				}
 				else {
-					std::cerr << "No match found" << std::endl;
+					//std::cerr << "No match found" << std::endl;
 				}
 
 				//int index = y * IMAGE_WIDTH_640 + x;
@@ -521,8 +559,8 @@ int main()
 					//std::cout << nodepth_point_inrgb.at<float>(2, 0) << '\n';
 					if (std::abs(point_z - nodepth_point_inrgb.at<float>(2, 0)) < 1e-4)
 					{
-						std::cout << x << " " << y << '\n';
-						std::cout << depth_inrgb.at<float>(y, x) << '\n';
+						//std::cout << x << " " << y << '\n';
+						//std::cout << depth_inrgb.at<float>(y, x) << '\n';
 						point_x = 0.0f;
 						point_y = 0.0f;
 						point_z = -1.0f;	
@@ -553,6 +591,8 @@ int main()
 
 			
 			// ----------------------------------- 保存孙喆提出要求的12个特征点 ----------------------------------- 
+			//// ---------- get_feature_points_3D ---------- 
+			//auto start_time = std::chrono::high_resolution_clock::now();
 			for (int feature_id = 0; feature_id < 12; feature_id++)
 			{
 				std::string value = feature_pixels_position_12[feature_id][i];
@@ -564,7 +604,7 @@ int main()
 					y = std::stoi(matches[2].str());
 				}
 				else {
-					std::cerr << "No match found" << std::endl;
+					//std::cerr << "No match found" << std::endl;
 				}
 
 				// 访问 reshape 后的图像中特定位置的像素值
@@ -574,15 +614,15 @@ int main()
 
 				if (std::abs(point_z - nodepth_point_inrgb.at<float>(2, 0)) < 1e-4)
 				{
-					std::cout << x << " " << y << '\n';
-					std::cout << depth_inrgb.at<float>(y, x) << '\n';
+					//std::cout << x << " " << y << '\n';
+					//std::cout << depth_inrgb.at<float>(y, x) << '\n';
 					point_x = 0.0f;
 					point_y = 0.0f;
 					point_z = -1.0f;
 					is_empty = true;
 				}
 
-
+				// 测试时间时注释
 				std::stringstream ss; // 创建一个字符串流对象
 				ss << std::fixed << std::setprecision(4); // 设置小数点精度为4位
 				ss << "(" << point_x << "," << point_y << "," << point_z << ")"; // 将浮点数写入字符串流中
@@ -590,9 +630,26 @@ int main()
 				feature_pixels_3D_12[i][feature_id] = result;
 
 			}
+
+			//auto end_time = std::chrono::high_resolution_clock::now();
+			////auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+			//// 计算运行时间（纳秒级别）
+			//auto duration_nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time);
+			//// 将纳秒转换为毫秒（浮点数）
+			//double duration_milliseconds = duration_nanoseconds.count() / 1000000.0;
+			////std::cout << "duration: " << duration_milliseconds << '\n';
+			//time_vec.push_back(duration_milliseconds);
+			// ---------- get_feature_points_3D ---------- 
+
 			// ----------------------------------- end -----------------------------------
-			std::cout << 1111 << '\n';
+			
+
+
+
+			//std::cout << 1111 << '\n';
 			// ----------------------------------- 新的位姿计算 -----------------------------------  
+			//// ---------- get_pose_6p ---------- 
+			//auto start_time = std::chrono::high_resolution_clock::now();
 			cv::Mat motion(6, 1, CV_32F);
 			if (is_empty) // 如果存在异常数据，直接全部赋值为-1
 			{
@@ -619,7 +676,16 @@ int main()
 				}
 
 			}
-			cv::imshow("Camera Feed", rgb);
+			//auto end_time = std::chrono::high_resolution_clock::now();
+			////auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+			//// 计算运行时间（纳秒级别）
+			//auto duration_nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time);
+			//// 将纳秒转换为毫秒（浮点数）
+			//double duration_milliseconds = duration_nanoseconds.count() / 1000000.0;
+			////std::cout << "duration: " << duration_milliseconds << '\n';d
+			//time_vec.push_back(duration_milliseconds);
+			//// ---------- get_pose_6p ---------- 
+			cv::imshow("Camera Feed", rgb); ////
 			// ----------------------------------- end -----------------------------------
 
 			////cv::imshow("Camera Feed", rgb);
@@ -641,21 +707,32 @@ int main()
 			//}
 			//cv::imshow("Camera Feed", rgb); ////
 
-			end_time = std::chrono::high_resolution_clock::now();
-			duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+			//end_time = std::chrono::high_resolution_clock::now();
+			//duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
 			//auto end_time = std::chrono::high_resolution_clock::now();
 			//auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-			int new_wait_time = wait_time - static_cast<int>(duration.count());
+			//int new_wait_time = wait_time - static_cast<int>(duration.count());
 			//std::cout << new_wait_time << " " << wait_time << " " << duration.count() << " " << static_cast<int>(duration.count()) << '\n';
 			
-			if (new_wait_time >= 1)
-			{
-				cv::waitKey(new_wait_time);
-			}
-			else
-			{
-				cv::waitKey(1);
-			}
+			//if (new_wait_time >= 1)
+			//{
+			//	cv::waitKey(new_wait_time);
+			//}
+			//else
+			//{
+			//	cv::waitKey(1);
+			//}
+			cv::waitKey(1);
+
+			auto end_time = std::chrono::high_resolution_clock::now();
+			//auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+			// 计算运行时间（纳秒级别）
+			auto duration_nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time);
+			// 将纳秒转换为毫秒（浮点数）
+			double duration_milliseconds = duration_nanoseconds.count() / 1000000.0;
+			std::cout << "duration: " << duration_milliseconds << '\n';
+			time_vec.push_back(duration_milliseconds);
+			// ---------- read_mode ---------- 
 			
 
 
@@ -665,15 +742,27 @@ int main()
 
 		}
 		//file.close();
-		//std::string feature_3D_path = "D:/aaaLab/aaagraduate/SaveVideo/source/points.txt";
-		utility.saveToTxt(feature_pixels_3D, feature_3D_path, '\t');
-		//utility.saveToTxt<std::string>(feature_pixels_3D, feature_3D_path, '\t');
+		////std::string feature_3D_path = "D:/aaaLab/aaagraduate/SaveVideo/source/points.txt";
+		//utility.saveToTxt(feature_pixels_3D, feature_3D_path, '\t');
+		////utility.saveToTxt<std::string>(feature_pixels_3D, feature_3D_path, '\t');
 
-		//std::string motion_vec_path = "D:/aaaLab/aaagraduate/SaveVideo/source/motion.txt";
-		utility.saveToTxt(motion_vec, motion_vec_path, '\t');
-		//utility.saveToTxt<float>(motion_vec, motion_vec_path, '\t');
-		//std::string feature_3D_path = "D:/aaaLab/aaagraduate/SaveVideo/source/points.txt";
-		utility.saveToTxt(feature_pixels_3D_12, feature_3D_path_12, '\t');
+		////std::string motion_vec_path = "D:/aaaLab/aaagraduate/SaveVideo/source/motion.txt";
+		//utility.saveToTxt(motion_vec, motion_vec_path, '\t');
+		////utility.saveToTxt<float>(motion_vec, motion_vec_path, '\t');
+		////std::string feature_3D_path = "D:/aaaLab/aaagraduate/SaveVideo/source/points.txt";
+		//utility.saveToTxt(feature_pixels_3D_12, feature_3D_path_12, '\t');
+
+		std::string root = "D:/aaaLab/aaagraduate/SaveVideo/source/time/";
+		//std::string time_filename = root + "registration_existingimg_time_C.txt";
+		//std::string time_filename = root + "get_feature_points_3D_time_C.txt";
+		//std::string time_filename = root + "get_pose_6p_time_C.txt";
+		std::string time_filename = root + "read_mode_time_C.txt";
+		std::ofstream time_file(time_filename);
+		for (double num : time_vec) {
+			time_file << num << '\n';
+		}
+		// 关闭文件
+		time_file.close();
 
 	}
 	catch (cv::Exception& e)

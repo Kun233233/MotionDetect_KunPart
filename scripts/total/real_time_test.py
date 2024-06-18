@@ -90,9 +90,19 @@ if __name__ == '__main__':
     # 初始化RGBCamera
     cam_tool = BoostPythonCam.RGBDCamera(camera_param_file_path, True, 0)
 
+    time_use = []
     while(1):
         start_time = time.time()
+
+        # start_time = time.time_ns()
         cam_tool.get_img_from_cam()
+
+        # end_time = time.time_ns()
+        # duration_nanoseconds = end_time - start_time
+        # # 将纳秒转换为毫秒（浮点数）
+        # duration_milliseconds = duration_nanoseconds / float(1e6)
+        # print("Execution time:", duration_milliseconds, " ms")
+        # time_use.append(duration_milliseconds)
 
         cam_tool.registration_capturedimg()
 
@@ -108,7 +118,23 @@ if __name__ == '__main__':
 
         cv.waitKey(1)
         count += 1
+        if count == 1500:
+            break
 
         end_time = time.time()
         execution_time = end_time - start_time
         print("Execution time:", execution_time, "seconds")
+
+
+    # 保存时间
+    # # 文件名
+    # root = "D:/aaaLab/aaagraduate/SaveVideo/source/time/"
+    # # filename = root + "registration_existingimg_time_Py.txt"
+    # # filename = root + "get_feature_points_3D_time_Py.txt"
+    # # filename = root + "get_pose_6p_time_Py.txt"
+    # filename = root + "read_img_time_Py.txt"
+
+    # # 将数字写入文件
+    # with open(filename, 'w') as file:
+    #     for number in time_use:
+    #         file.write(str(number) + "\n")
